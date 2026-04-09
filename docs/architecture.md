@@ -50,7 +50,7 @@ They would increase distribution and maintenance cost without improving the core
 This split keeps the UI layer separate from the gameplay loop and keeps audio explicit instead of hidden inside a general-purpose engine abstraction.
 
 ## TypeScript posture
-The codebase should stay on current stable TypeScript while remaining easy to move to TypeScript 7 and later.
+The codebase should stay on current stable TypeScript while remaining easy to move to future TypeScript versions.
 
 Practical rules:
 
@@ -73,4 +73,3 @@ This decision is considered valid if a browser-only PoC can cover the first game
 - a Phaser gameplay scene
 - at least one audio cue through Howler.js
 - installable or cacheable PWA behavior
-

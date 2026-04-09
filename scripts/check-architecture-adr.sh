@@ -26,7 +26,7 @@ check "Native-first app development"
 check "React owns"
 check "Phaser owns"
 check "Howler.js owns"
-check "TypeScript 7"
+check "future TypeScript versions"
 check "browser-only PoC"
 
 printf 'architecture ADR check passed\n'
