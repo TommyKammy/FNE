@@ -7,6 +7,7 @@ The planning glossary for shared issue vocabulary lives in [docs/planning-glossa
 The TypeScript usage policy lives in [docs/typescript-policy.md](docs/typescript-policy.md).
 The draft TypeScript compiler baseline lives in [docs/typescript-baseline.md](docs/typescript-baseline.md).
 The TypeScript compatibility review checklist lives in [docs/typescript-review-checklist.md](docs/typescript-review-checklist.md).
+The lint and typecheck gate expectations live in [docs/validation-gates.md](docs/validation-gates.md).
 
 ## Product Brief
 FNE is a rhythm-based vocabulary learning game for junior-high students who struggle with text-only study. It borrows the energy and clear feedback loop of Friday Night Funkin' so practice feels like play instead of a worksheet.
