@@ -5,6 +5,7 @@ FNE stands for Friday Night English.
 The initial monorepo shape is documented in [docs/repo-boundaries.md](docs/repo-boundaries.md).
 The planning glossary for shared issue vocabulary lives in [docs/planning-glossary.md](docs/planning-glossary.md).
 The TypeScript usage policy lives in [docs/typescript-policy.md](docs/typescript-policy.md).
+The draft TypeScript compiler baseline lives in [docs/typescript-baseline.md](docs/typescript-baseline.md).
 
 ## Product Brief
 FNE is a rhythm-based vocabulary learning game for junior-high students who struggle with text-only study. It borrows the energy and clear feedback loop of Friday Night Funkin' so practice feels like play instead of a worksheet.
