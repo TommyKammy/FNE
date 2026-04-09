@@ -10,7 +10,7 @@ Keep TypeScript usage browser-first, easy to review, and safe to upgrade.
 - Use ES modules only. Prefer `import` and `export` syntax everywhere.
 - Import within a package with relative paths.
 - Import across packages only from a package entrypoint or documented public adapter, never from another package's private `src/` files.
-- Keep `tsconfig` strict and modern. The default posture should be `strict: true`, browser-oriented module resolution, and compiler settings that do not rely on legacy Node-only behavior for browser code.
+- Keep `tsconfig` strict and modern. The default posture should be `strict: true`, browser-oriented module resolution, and compiler settings that do not rely on legacy Node-only behavior for browser code. See [docs/typescript-baseline.md](docs/typescript-baseline.md) for the draft compiler baseline.
 
 ## Forbidden Patterns
 
