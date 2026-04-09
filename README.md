@@ -1,2 +1,25 @@
 # FNE
-FNE stands for Friday Night English, and aims to be a rhythm-based learning game.
+FNE stands for Friday Night English.
+
+## Product Brief
+FNE is a rhythm-based vocabulary learning game for junior-high students who struggle with text-only study. It borrows the energy and clear feedback loop of Friday Night Funkin' so practice feels like play instead of a worksheet.
+
+### Target Learner Assumptions
+- The learner is in junior high and already knows some English words, but loses them when study depends on reading definitions.
+- The learner responds better to fast, visual cues than to dense text explanations.
+- The learner is more likely to repeat practice when the activity feels like timing, performance, and progression.
+
+### Motivation Problem
+Text-first flashcards force the learner to decode meaning from words before they can remember it. That adds friction, lowers confidence, and makes repetition feel like homework.
+
+### Core Retention Strategy
+Each word is taught through an image plus pronunciation. The image gives immediate meaning, and the spoken form anchors the word in memory through sound. Using both together reduces dependence on text and gives the learner two cues to recall later.
+
+### Learning Goal
+Help the learner recognize and remember common English vocabulary through short, repeatable rhythm rounds.
+
+### First-Wave Success Criteria
+- The learner understands the intended word from the image and pronunciation without needing a long text explanation.
+- The learner can complete a short rhythm round and wants to try another one.
+- In early playtests, the learner can recall or recognize the word shortly after practice.
+- The experience feels like a motivating game loop first, and a study tool second.
