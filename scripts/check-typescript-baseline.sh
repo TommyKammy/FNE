@@ -18,12 +18,15 @@ check_present() {
 }
 
 check_present "TypeScript Baseline"
-check_present "strict"
+check_present '`strict: true`'
+check_present '`noImplicitOverride: true`'
+check_present '`noPropertyAccessFromIndexSignature: true`'
+check_present '`exactOptionalPropertyTypes: true`'
 check_present "apps/web/"
 check_present "packages/runtime/"
 check_present "packages/shared/"
 check_present "ESM-first"
-check_present "verbatimModuleSyntax"
+check_present '`verbatimModuleSyntax: true`'
 check_present "moduleResolution"
 check_present "future TypeScript"
 check_present "Deprecated And Legacy Settings To Avoid"
