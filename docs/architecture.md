@@ -4,7 +4,7 @@
 Accepted
 
 ## Context
-FNE is a rhythm-based vocabulary game for junior-high students. The first version needs to prove the core learning loop quickly, with the lowest possible setup friction for both development and playtesting.
+FNE is a rhythm-based vocabulary game for junior high school students. The first version needs to prove the core learning loop quickly, with the lowest possible setup friction for both development and playtesting.
 
 The product will start as a browser app instead of a heavier game-engine or native-client stack. That choice keeps the PoC easy to open, share, and iterate on during early validation.
 
