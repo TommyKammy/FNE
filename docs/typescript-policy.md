@@ -32,4 +32,4 @@ Write code so a future TypeScript 7 upgrade is mostly a config update, not a rew
 
 ## Review Rule
 
-If a change introduces a new module shape, import path, or compiler setting, the review should check it against this policy before approval.
+If a change introduces a new module shape, import path, compiler setting, or asset-loading path, the review should check it against this policy and the [TypeScript Compatibility Review Checklist](docs/typescript-review-checklist.md) before approval.
