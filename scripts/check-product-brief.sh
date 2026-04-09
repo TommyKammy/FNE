@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
-file="README.md"
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+file="$script_dir/../README.md"
 
 check() {
   pattern="$1"
