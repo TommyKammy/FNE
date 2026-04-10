@@ -27,6 +27,16 @@ This keeps the reviewable step sequence under 3 steps because the learner only n
 - The first item should appear as soon as the stage is ready, with the image-first cue and supporting pronunciation available in the active play surface.
 - The learner should be able to tell what to do first before any timing window or answer deadline begins.
 
+## First Success Loop
+
+- The default first stage should always open in Learn Mode so the learner enters the guided first-exposure flow instead of a harder review or battle variant.
+- The first success loop should be deterministic: the same launch action, default stage, first item posture, and reveal order should be used on every first run unless a later spec explicitly replaces that contract.
+- The loop should begin with the Learn Mode reveal order of image first, pronunciation next, text after the first exposure, and then one simple learner response.
+- The first response should be achievable without prior knowledge because the learner acts only after the image-first reveal and pronunciation have already taught the item.
+- The default pacing should let the learner move from the launch action to visible success feedback in under 30 seconds.
+- Success feedback should arrive immediately after the learner completes the guided response and should clearly signal that the first loop has been completed correctly.
+- After that success feedback, the flow may continue to the next item or a short stage wrap-up, but it must not insert a new setup branch before the learner understands that the first success has happened.
+
 ## Menu and Setup Constraints
 
 - Settings, profile controls, or content-selection menus should not block the first run.
@@ -38,4 +48,6 @@ This keeps the reviewable step sequence under 3 steps because the learner only n
 
 - Review should confirm that the first interaction remains reachable in one action.
 - Review should confirm that no setup is required before the learner sees the first item.
+- Review should confirm that the first success loop stays deterministic enough for planning and does not depend on hidden pack, timing, or menu choices.
+- Review should confirm that the default first loop can reach success feedback in under 30 seconds.
 - Review should reject launch flows that add branching menus or extra confirmations before core play starts.
