@@ -5,6 +5,8 @@ FNE stands for Friday Night English.
 The initial monorepo shape is documented in [docs/repo-boundaries.md](docs/repo-boundaries.md).
 The planning glossary for shared issue vocabulary lives in [docs/planning-glossary.md](docs/planning-glossary.md).
 The canonical vocabulary item schema lives in [docs/vocabulary-item-schema.md](docs/vocabulary-item-schema.md).
+The pack schema lives in [docs/pack-schema.md](docs/pack-schema.md).
+The stage schema lives in [docs/stage-schema.md](docs/stage-schema.md).
 The TypeScript usage policy lives in [docs/typescript-policy.md](docs/typescript-policy.md).
 The draft TypeScript compiler baseline lives in [docs/typescript-baseline.md](docs/typescript-baseline.md).
 The TypeScript compatibility review checklist lives in [docs/typescript-review-checklist.md](docs/typescript-review-checklist.md).
