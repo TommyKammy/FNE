@@ -29,6 +29,7 @@ check_contains() {
 check_file "$doc" "issue template style doc"
 check_file "$epic_template" "epic issue template"
 check_file "$child_template" "child issue template"
+check_file "$readme" "README"
 
 check_contains "$doc" "Issue Template Style" "issue template style doc"
 check_contains "$doc" "Epic Template" "issue template style doc"
