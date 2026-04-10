@@ -26,6 +26,11 @@ if [ ! -f "$doc" ]; then
   exit 1
 fi
 
+if [ ! -f "$readme" ]; then
+  printf 'missing README file: %s\n' "$readme" >&2
+  exit 1
+fi
+
 check_doc "QA Strategy for Content and Gameplay Logic"
 check_doc "Schema Validation for Content Files"
 check_doc "Content QA"
