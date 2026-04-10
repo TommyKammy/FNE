@@ -18,6 +18,7 @@ The pack schema lives in [docs/pack-schema.md](docs/pack-schema.md).
 The stage schema lives in [docs/stage-schema.md](docs/stage-schema.md).
 The mod contract lives in [docs/mod-contract.md](docs/mod-contract.md).
 The asset conventions live in [docs/asset-conventions.md](docs/asset-conventions.md).
+The QA strategy for content validation and gameplay verification lives in [docs/qa-strategy.md](docs/qa-strategy.md).
 The TypeScript usage policy lives in [docs/typescript-policy.md](docs/typescript-policy.md).
 The draft TypeScript compiler baseline lives in [docs/typescript-baseline.md](docs/typescript-baseline.md).
 The TypeScript compatibility review checklist lives in [docs/typescript-review-checklist.md](docs/typescript-review-checklist.md).
