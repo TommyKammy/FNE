@@ -33,6 +33,9 @@ check_doc "image, then pronunciation, then text, then response prompt"
 check_doc "forgiving enough for beginners"
 check_doc "miss does not fail the item permanently"
 check_doc "every scheduled item has been passed at least once"
+check_doc "repeats the same image and pronunciation once more"
+check_doc "minimal confirmation"
+check_doc "under 5 seconds"
 check_readme "docs/learn-mode.md"
 
 printf 'Learn Mode check passed\n'
