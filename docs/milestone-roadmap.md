@@ -59,6 +59,7 @@ Package the planned learning loop into a coherent first proof of concept that ca
 - Parent Observation Features are limited to lightweight summaries derived from stage results, consistent with `docs/parent-observation.md`.
 - The PoC is reviewable as a delivery plan outcome rather than a codebase sketch: what is playable, what is observable, and what remains intentionally deferred are all explicit.
 - The verification language for implementation tickets can reuse the `typecheck` and `lint` gate names from `docs/validation-gates.md`.
+- `docs/qa-strategy.md` separates content QA, gameplay QA, and first-playable manual playtest expectations well enough to guide later verification work.
 - The team can schedule first external playtests with a shared understanding of what must be true before the PoC counts as ready.
 
 ## Review Notes
