@@ -5,6 +5,16 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 doc="$script_dir/../docs/review-loop.md"
 readme="$script_dir/../README.md"
 
+[ -f "$doc" ] || {
+  printf 'missing required file: %s\n' "$doc" >&2
+  exit 1
+}
+
+[ -f "$readme" ] || {
+  printf 'missing required file: %s\n' "$readme" >&2
+  exit 1
+}
+
 check_doc() {
   pattern="$1"
   if ! grep -Fq -- "$pattern" "$doc"; then
