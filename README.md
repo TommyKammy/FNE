@@ -4,6 +4,7 @@ FNE stands for Friday Night English.
 ## Repository Layout
 The initial monorepo shape is documented in [docs/repo-boundaries.md](docs/repo-boundaries.md).
 The planning glossary for shared issue vocabulary lives in [docs/planning-glossary.md](docs/planning-glossary.md).
+The staged delivery plan from planning docs to the first browser PoC lives in [docs/milestone-roadmap.md](docs/milestone-roadmap.md).
 The Learn Mode behavior spec lives in [docs/learn-mode.md](docs/learn-mode.md).
 The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-loop.md).
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
