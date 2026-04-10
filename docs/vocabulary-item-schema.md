@@ -47,6 +47,7 @@ Define the canonical JSON schema for one vocabulary item so pack docs and asset 
 - Reject the item if `tags` is present but is not an array of non-empty strings.
 - Reject the item if `exampleSentence`, `partOfSpeech`, or `notes` are present but are not strings.
 - Treat `imageAssetId` and `audioAssetId` as opaque identifiers at this layer; asset existence is validated separately by asset or pack validation.
+- Resolve `imageAssetId` and `audioAssetId` through [docs/asset-conventions.md](asset-conventions.md).
 - Unknown fields are rejected so the schema stays stable and predictable.
 
 ## Reusability
@@ -54,4 +55,5 @@ Define the canonical JSON schema for one vocabulary item so pack docs and asset 
 - This schema describes one item only and does not depend on pack id, stage id, or pack ordering.
 - Pack docs can reference this schema for vocabulary content.
 - Asset docs can reference this schema for the shape of asset-backed item fields.
+- Asset convention docs should use this schema as the source of truth for item-level asset references.
 - If the schema needs new fields later, add them here first and update every dependent doc together.
