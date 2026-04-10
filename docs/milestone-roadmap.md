@@ -52,10 +52,11 @@ Extend the first slice into a short but complete learning loop that can teach, r
 - The intended stage sequence is now clear: guided exposure first, recognition follow-up second, higher-pressure rhythm challenge third, short review closure last.
 
 ## Milestone 5 - Browser PoC Ready for First External Playtest
-Package the planned learning loop into a coherent first proof of concept that can be shared and judged outside the planning circle.
+Shape the planned learning loop into a coherent first proof of concept that can be shared and judged outside the planning circle.
 
 ### Exit Criteria
 - The browser PoC covers one end-to-end learner loop from entry to completion using the accepted browser-first architecture.
+- `docs/release-posture.md` defines the internal preview build boundary and PoC-era versioning language without assuming a shipping pipeline yet.
 - Parent Observation Features are limited to lightweight summaries derived from stage results, consistent with `docs/parent-observation.md`.
 - The PoC is reviewable as a delivery plan outcome rather than a codebase sketch: what is playable, what is observable, and what remains intentionally deferred are all explicit.
 - The verification language for implementation tickets can reuse the `typecheck` and `lint` gate names from `docs/validation-gates.md`.
