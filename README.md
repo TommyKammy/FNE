@@ -8,6 +8,7 @@ The Learn Mode behavior spec lives in [docs/learn-mode.md](docs/learn-mode.md).
 The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-loop.md).
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
 The Listen & Match Mode behavior spec lives in [docs/listen-and-match-mode.md](docs/listen-and-match-mode.md).
+The shared visual readability and input simplicity rules live in [docs/ux-rules.md](docs/ux-rules.md).
 The canonical vocabulary item schema lives in [docs/vocabulary-item-schema.md](docs/vocabulary-item-schema.md).
 The pack schema lives in [docs/pack-schema.md](docs/pack-schema.md).
 The stage schema lives in [docs/stage-schema.md](docs/stage-schema.md).
