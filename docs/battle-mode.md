@@ -49,6 +49,16 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Combo feedback should celebrate consistency, but it must not overwhelm the vocabulary image, pronunciation cue, or lane readability.
 - End-of-phrase feedback may summarize streak quality or survival state, but the player should still understand the result beat by beat during play.
 
+## First Exposure Feel-Win Plan
+
+- The first Battle Mode exposure for a learner should be authored as a guided confidence beat, not as a full-pressure challenge chart.
+- The opening phrase should use ultra-simple note patterns so the learner can map lane motion to the beat before density increases.
+- The first implementation should use high timing tolerance for this opening exposure so a near-beat input still feels accepted and synchronized.
+- The stage should reserve one guaranteed combo moment early in the chart by presenting a short run of evenly spaced notes that a first-attempt learner can realistically hit in sequence.
+- Hit sparks, lane flashes, and audio-backed confirmation should create strong audiovisual sync so successful inputs feel locked to the song instead of delayed or detached.
+- The learner should achieve a visible combo on the first attempt before any harsher phrase appears, even if later measures ask for slightly tighter focus.
+- The opening phrase should avoid overwhelm by limiting the opening phrase to one active vocabulary cue, one short preview, and one readable measure group before adding any variation.
+
 ## Fail State
 
 - Battle Mode uses a visible performance meter that represents whether the learner is holding the round together.
