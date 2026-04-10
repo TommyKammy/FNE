@@ -5,6 +5,7 @@ FNE stands for Friday Night English.
 The initial monorepo shape is documented in [docs/repo-boundaries.md](docs/repo-boundaries.md).
 The planning glossary for shared issue vocabulary lives in [docs/planning-glossary.md](docs/planning-glossary.md).
 The Learn Mode behavior spec lives in [docs/learn-mode.md](docs/learn-mode.md).
+The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-loop.md).
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
 The Listen & Match Mode behavior spec lives in [docs/listen-and-match-mode.md](docs/listen-and-match-mode.md).
 The canonical vocabulary item schema lives in [docs/vocabulary-item-schema.md](docs/vocabulary-item-schema.md).
