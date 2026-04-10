@@ -21,8 +21,9 @@ Define the first-exposure learner flow for Learn Mode so implementation can sequ
 5. The English term appears only after the learner has had a short first look at the image and heard the pronunciation once.
 6. The learner is prompted to respond on a simple confirmation beat or tap after the guided reveal.
 7. The mode judges the response with a forgiving timing rule and then gives immediate feedback.
-8. If the learner misses the response, the same item repeats with the same reveal order and an extra supportive cue before advancing.
-9. After the learner completes the required response for the item, the stage advances to the next item or to the end-of-stage summary.
+8. A successful response triggers a short reinforcement moment that repeats the same image and pronunciation once more with minimal confirmation before the mode advances.
+9. If the learner misses the response, the same item repeats with the same reveal order and an extra supportive cue before advancing.
+10. After the learner completes the required response for the item, the stage advances to the next item or to the end-of-stage summary.
 
 ## Presentation Timeline
 
@@ -39,11 +40,13 @@ Define the first-exposure learner flow for Learn Mode so implementation can sequ
 - The gap between image reveal and pronunciation should be short enough that both cues read as one teaching moment.
 - The gap before the response prompt should give the learner time to hear the word once and orient to the image before acting.
 - Feedback should arrive immediately after the learner response so the cause-and-effect stays obvious.
+- The success-side reinforcement moment should stay under 5 seconds so it feels like a clear replay of the learning cue, not a separate recap screen.
 - A repeated item should reuse the same cue order with slightly stronger support, such as replaying the pronunciation or visually emphasizing the image, instead of introducing a new rule.
 
 ## Learner Feedback
 
 - A successful response should confirm that the learner matched the cue correctly, with positive audiovisual feedback and no extra explanation wall.
+- That successful response should be followed by a short reinforcement moment that repeats the same image and pronunciation once more, paired with minimal confirmation instead of long text.
 - A missed or late response should signal that the learner can try again without framing the first exposure as failure.
 - Feedback should support first exposure by reinforcing the same item cues rather than hiding them.
 - Learn Mode should avoid harsh fail states, score penalties, or progress loss on the first miss for a new item.
