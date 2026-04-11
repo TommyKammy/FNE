@@ -49,6 +49,16 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Combo feedback should celebrate consistency, but it must not overwhelm the vocabulary image, pronunciation cue, or lane readability.
 - End-of-phrase feedback may summarize streak quality or survival state, but the player should still understand the result beat by beat during play.
 
+## Hit Feel and Sync Contract
+
+- A judged hit should resolve on the same gameplay tick that records the judgment so the player does not feel a detached confirm after the input has already been accepted.
+- Receptor flash, lane pulse, hit spark, combo increment, and any meter recovery should all start from the same judged hit event instead of separate delayed timers.
+- Any hit confirmation sound should trigger from the same judged hit event as the visual feedback so the learner receives one locked response instead of staggered sound and animation layers.
+- Animation and sound sync should be measured against the judged hit moment rather than note spawn, travel interpolation, or delayed HUD updates.
+- Receptor feedback should stay at the receptor so the learner reads timing at the target line first, even when other lane or HUD effects are present.
+- Lane feedback may reinforce the hit path, but it must fade fast enough that the next incoming note remains readable and the active vocabulary cue is not obscured.
+- A miss or failed late input should use a distinct receptor or lane response and must not reuse the successful hit flash or sound.
+
 ## First Exposure Feel-Win Plan
 
 - The first Battle Mode exposure for a learner should be authored as a guided confidence beat, not as a full-pressure challenge chart.
@@ -72,4 +82,5 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Battle Mode defines lane count, count structure, vocabulary cue cadence, combo behavior, and fail-state intent.
 - Battle Mode does not define pack-specific chart authoring tools, narrative staging, asset style, or final scoring formulas beyond combo and survival expectations.
 - The first implementation should remain compatible with the browser-first runtime split in [docs/architecture.md](architecture.md): Phaser owns chart timing and hit detection, while React may own surrounding HUD, prompts, and retry flow.
+- Battle Mode baseline review should confirm the hit-feel spec keeps the sync contract explicit for judgment timing, hit confirmation sound, receptor feedback, lane feedback, and animation alignment.
 - If a later issue needs opponent AI, multiple judgment tiers, or difficulty variants, that work should extend this spec rather than replace the four-lane, four-count vocabulary battle baseline.
