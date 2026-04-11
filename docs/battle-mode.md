@@ -59,6 +59,8 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Combo should pass through readable milestone steps instead of feeling flat until a single huge celebration.
 - A small early milestone should confirm that the learner has started building momentum, a mid-combo milestone should feel measurably stronger, and a high-combo milestone should read as a peak without turning into screen noise.
 - The feedback stack should escalate in a controlled order: receptor confirm first, then lane reinforcement, then combo text or count treatment, then any stronger milestone accent.
+- Battle Mode should treat readability as a fixed juice budget, not as an excuse to add every available effect.
+- At most one strong celebration accent should compete for attention at a time.
 - Scale should rise by tier, but each tier should stay anchored near the playfield so the learner still reads timing at the receptors before looking anywhere else.
 - Color and brightness may intensify at higher combo tiers, but the palette shift should stay inside the established lane and HUD treatment instead of replacing the active vocabulary cue with a new full-screen focal point.
 - screen-wide flashes, full-screen color washes, or oversized text bursts should stay out of the core combo loop because they would compete with note reading and vocabulary recognition.
@@ -71,12 +73,15 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Receptor flash, lane pulse, hit spark, combo increment, and any meter recovery should all start from the same judged hit event instead of separate delayed timers.
 - Any hit confirmation sound should trigger from the same judged hit event as the visual feedback so the learner receives one locked response instead of staggered sound and animation layers.
 - Animation and sound sync should be measured against the judged hit moment rather than note spawn, travel interpolation, or delayed HUD updates.
+- If multiple feedback layers want attention on the same beat, priority should remain receptor timing first, active vocabulary cue second, performance meter and combo third, opponent or background spectacle last.
 - Receptor feedback should stay at the receptor so the learner reads timing at the target line first, even when other lane or HUD effects are present.
 - Lane feedback may reinforce the hit path, but it must fade fast enough that the next incoming note remains readable and the active vocabulary cue is not obscured.
+- Lane travel space around the next incoming note should stay clear of lingering particles, flashes, or overlays.
 - A miss or failed late input should use a distinct receptor or lane response and must not reuse the successful hit flash or sound.
 - A single miss should not freeze note scroll, pause the song, or force an immediate restart while the meter still has room to absorb the mistake.
 - Miss feedback should resolve quickly enough that the next incoming note remains readable and playable on time instead of chaining one error into a second unavoidable miss.
 - If the current vocabulary item is still active, its cue should stay visible through the miss response so the learner keeps the phrase context instead of losing the word mid-recovery.
+- When readability is at risk, implementation should cut or soften background, opponent, and combo effects before touching the active vocabulary cue or receptor clarity.
 
 ## First Exposure Feel-Win Plan
 
