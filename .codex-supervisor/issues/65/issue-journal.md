@@ -24,10 +24,10 @@
 - Hypothesis: The existing Battle Mode contract defined miss penalty and fail state, but not the post-miss continuity needed to preserve rhythm and learner momentum after an isolated error.
 - What changed: Tightened `scripts/check-battle-mode.sh` with focused miss-continuity assertions, reproduced the missing-spec failure, then updated `docs/battle-mode.md` to require uninterrupted scroll/song flow, fast-clearing miss feedback, cue persistence, and recovery through the next judged notes.
 - Current blocker: none
-- Next exact step: Commit the spec and check updates, then open a draft PR if branch policy still expects an early checkpoint PR.
+- Next exact step: Monitor draft PR #70 and continue only if follow-up review asks for stronger verification or adjacent miss-recovery clarifications.
 - Verification gap: No runtime/playtest verification is possible in this docs-only workspace; verification is limited to doc contract checks.
 - Files touched: .codex-supervisor/issues/65/issue-journal.md; docs/battle-mode.md; scripts/check-battle-mode.sh
 - Rollback concern: Low; changes only narrow and clarify the Battle Mode documentation contract and its focused validation script.
-- Last focused command: for f in scripts/check-*.sh; do sh "$f" >/tmp/$(basename "$f").out && printf '%s OK\n' "$f" || { cat /tmp/$(basename "$f").out; exit 1; }; done
+- Last focused command: git push -u origin codex/issue-65 && gh pr create --draft --base main --head codex/issue-65 --title "Define miss continuity in battle mode" --body ...
 ### Scratchpad
 - Keep this section short. The supervisor may compact older notes automatically.
