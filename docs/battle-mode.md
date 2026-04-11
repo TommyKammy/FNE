@@ -26,6 +26,15 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - A stage chart may vary density across measures, but the core teaching rhythm should avoid unreadable burst patterns in the first implementation pass.
 - Count readability matters more than advanced syncopation because the mode still supports vocabulary reinforcement, not expert-level rhythm mastery.
 
+## Chart Readability Plan
+
+- Battle Mode chart review should inspect note density, groove anchors, and escalation before a stage is accepted as beginner-safe.
+- A beginner-safe phrase should introduce one rhythmic idea at a time so the learner is not decoding a density jump, syncopation change, and lane shift on the same beat.
+- Groove consistency should come from keeping one anchor pulse for a phrase or short measure group, even when a variation adds offbeats or lane alternation around it.
+- Density should rise in small steps, then return to a simpler recovery measure before the next increase so the learner can reset their count without losing momentum.
+- Beginner-safe groove should stay enjoyable by mixing repeated anchors with short call-and-response variations instead of flattening the whole chart into identical counts.
+- If a phrase still reads as noisy in review, simplify density first, then syncopation, then lane movement so the groove stays musical while readability recovers.
+
 ## Timing Concept
 
 - Each note has a scheduled hit moment plus a defined hit window around that moment.
