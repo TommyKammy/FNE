@@ -47,6 +47,13 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - Misses or late inputs should produce clear negative feedback without hiding the active vocabulary cue.
 - The combo rises only on judged hits and should break on a miss, late input, or other failed judgment.
 - Combo feedback should celebrate consistency, but it must not overwhelm the vocabulary image, pronunciation cue, or lane readability.
+- Combo should pass through readable milestone steps instead of feeling flat until a single huge celebration.
+- A small early milestone should confirm that the learner has started building momentum, a mid-combo milestone should feel measurably stronger, and a high-combo milestone should read as a peak without turning into screen noise.
+- The feedback stack should escalate in a controlled order: receptor confirm first, then lane reinforcement, then combo text or count treatment, then any stronger milestone accent.
+- Scale should rise by tier, but each tier should stay anchored near the playfield so the learner still reads timing at the receptors before looking anywhere else.
+- Color and brightness may intensify at higher combo tiers, but the palette shift should stay inside the established lane and HUD treatment instead of replacing the active vocabulary cue with a new full-screen focal point.
+- screen-wide flashes, full-screen color washes, or oversized text bursts should stay out of the core combo loop because they would compete with note reading and vocabulary recognition.
+- The strongest combo celebration should resolve in the lane and HUD layers, then return to the normal readability baseline quickly enough that the next phrase is readable on arrival.
 - End-of-phrase feedback may summarize streak quality or survival state, but the player should still understand the result beat by beat during play.
 
 ## Hit Feel and Sync Contract
