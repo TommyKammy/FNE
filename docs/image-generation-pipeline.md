@@ -50,6 +50,7 @@ Meaning to depict: {{meaning}}
 Part of speech: {{partOfSpeech}}
 Example sentence: {{exampleSentence}}
 Tags: {{tags}}
+Notes: {{notes}}
 
 Requirements:
 - Show one clear primary subject that matches the target meaning.
@@ -63,6 +64,7 @@ Requirements:
 Prompt assembly rules:
 
 - Omit optional lines when the source field is absent.
+- Use `notes` only as optional editorial guidance that may clarify framing or disambiguation, never as a replacement for the item's `term` or `meaning`.
 - Do not rename placeholders or replace `{{term}}` and `{{meaning}}` with freeform aliases in tooling.
 - Do not inject asset filenames, version strings, or pack paths into the visual prompt body.
 - If the item meaning is still ambiguous after template filling, stop for editorial clarification before generation.

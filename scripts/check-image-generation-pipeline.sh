@@ -34,9 +34,11 @@ check_doc "Generation Steps"
 check_doc "Validation and Review"
 check_doc "{{term}}"
 check_doc "{{meaning}}"
+check_doc "{{notes}}"
 check_doc "imageAssetId"
 check_doc "docs/asset-conventions.md"
 check_doc "consistent and valid"
+check_doc "Use \`notes\` only as optional editorial guidance"
 check_readme "docs/image-generation-pipeline.md"
 
 printf 'image generation pipeline check passed\n'
