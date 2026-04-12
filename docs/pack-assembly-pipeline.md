@@ -97,10 +97,13 @@ Structural validation happens at assembly time so generated packs can be compose
 The output of the pipeline is one structurally valid pack manifest:
 
 - it matches [docs/pack-schema.md](pack-schema.md)
+- it stays compatible with the first-wave mod boundary in [docs/mod-contract.md](mod-contract.md)
+- it declares one supported `schemaVersion` in the assembled manifest so loaders can reject incompatible content cleanly
+- it remains data-only and does not require code execution, runtime hooks, or post-load transformation
 - it embeds only canonical vocabulary item objects
 - it embeds only valid stage objects
 - it keeps stages and modes as pack-local collections
-- it is complete enough for a loader to read one file or one assembled object and start stage playback
+- it is loader-compatible without modification, so a loader can read one file or one assembled object and start stage playback
 
 ## Review Expectations
 
