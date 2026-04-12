@@ -26,6 +26,23 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - A stage chart may vary density across measures, but the core teaching rhythm should avoid unreadable burst patterns in the first implementation pass.
 - Count readability matters more than advanced syncopation because the mode still supports vocabulary reinforcement, not expert-level rhythm mastery.
 
+## Beat Pattern Generation Rules
+
+- Beat pattern generation should begin from the spoken word shape instead of from a lane gimmick, because the chart still exists to reinforce vocabulary timing and recall.
+- The syllable count should set the phrase footprint before lane assignment or flourish decisions are added.
+- One-syllable words should usually map to a single anchor hit with optional pickup or release space around it instead of artificial filler notes.
+- Two-syllable words should usually map to two evenly readable hits that preserve the natural spoken split without forcing swing or syncopation by default.
+- Three-syllable words may use three hits across one measure group when the result still reads as a stable beginner phrase.
+- Words with four or more syllables should not force one hit per syllable when that would create a cramped or noisy chart; cap the learner-facing pattern at four played hits and reuse one of the stronger syllables as the musical anchor when compression is needed.
+- If a spoken syllable is reduced, blurred, or too fast to read cleanly, the generated chart may merge it into the neighboring beat as long as the phrase still feels aligned to the pronunciation preview.
+- Stress should influence emphasis, not just count; a stressed syllable should usually receive the clearest anchor, longest hold, or most stable lane position in the generated phrase.
+- Default beginner Battle Mode tempo should stay in a narrow mid-tempo band so first-wave charts remain readable while still feeling energetic, roughly 92 to 116 BPM.
+- Below that band, the groove can feel too sparse to support a satisfying battle loop unless the chart adds unnecessary filler; Above that band, beginner-safe syllable mapping becomes harder to read without thinning patterns aggressively.
+- The same target word should keep the same base beat identity each time it reappears in a stage unless the stage is intentionally teaching a clearer escalation of difficulty.
+- Pattern variation should preserve recognition first: density should escalate by adding subdivision or lane variation around the same anchor idea instead of rebuilding the word from a completely different rhythm each time.
+- Generated phrases should end on a clean count boundary or an obvious held resolution so the next vocabulary preview does not collide with the tail of the previous word.
+- A generated pattern is acceptable only when it stays readable on first sight and musically aligned to the word cue rather than technically matching syllables while feeling awkward to play.
+
 ## Chart Readability Plan
 
 - Battle Mode chart review should inspect note density, groove anchors, and escalation before a stage is accepted as beginner-safe.
