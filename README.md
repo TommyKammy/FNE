@@ -16,6 +16,7 @@ The shared visual readability and input simplicity rules live in [docs/ux-rules.
 The practical accessibility baseline lives in [docs/accessibility-baseline.md](docs/accessibility-baseline.md).
 The minimal launch-to-play contract lives in [docs/first-launch-flow.md](docs/first-launch-flow.md).
 The AI content generation contract lives in [docs/ai-content-generation-contract.md](docs/ai-content-generation-contract.md).
+The image generation pipeline contract lives in [docs/image-generation-pipeline.md](docs/image-generation-pipeline.md).
 The canonical vocabulary item schema lives in [docs/vocabulary-item-schema.md](docs/vocabulary-item-schema.md).
 The pack schema lives in [docs/pack-schema.md](docs/pack-schema.md).
 The stage schema lives in [docs/stage-schema.md](docs/stage-schema.md).
