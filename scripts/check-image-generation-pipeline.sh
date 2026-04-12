@@ -26,6 +26,11 @@ if [ ! -f "$doc" ]; then
   exit 1
 fi
 
+if [ ! -f "$readme" ]; then
+  printf 'missing README: %s\n' "$readme" >&2
+  exit 1
+fi
+
 check_doc "Image Generation Pipeline"
 check_doc "Prompt Template"
 check_doc "Style Contract"
