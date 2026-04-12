@@ -37,11 +37,11 @@ Failure signature: PRRT_kwDOR-A-2M56V13h
 - Hypothesis: The remaining review blocker is the missing README existence guard in `scripts/check-image-generation-pipeline.sh`; the correct fix is to fail fast on an absent README before any pattern grep runs.
 - What changed: Added an explicit `[ ! -f "$readme" ]` pre-check to `scripts/check-image-generation-pipeline.sh` so a missing README now reports `missing README: <path>` instead of a misleading missing-pattern failure.
 - Current blocker: none
-- Next exact step: Commit the README guard fix, push `codex/issue-75`, then re-check PR #83 for any remaining unresolved review feedback.
+- Next exact step: Re-check PR #83 after CodeRabbit processes commit `81560c9`, and only reply to or resolve the remaining thread if an operator explicitly wants GitHub write actions.
 - Verification gap: No broader aggregator script exists in this repo, so verification remains limited to the focused image-pipeline check plus adjacent contract checks.
 - Files touched: scripts/check-image-generation-pipeline.sh
 - Rollback concern: low; changes are additive documentation and validation only.
-- Last focused command: sh scripts/check-image-generation-pipeline.sh
+- Last focused command: gh api graphql -f query='query { repository(owner: "TommyKammy", name: "FNE") { pullRequest(number: 83) { reviewThreads(first: 20) { nodes { id isResolved isOutdated path line comments(first: 10) { nodes { author { login } body url createdAt } } } } } } }'
 ### Scratchpad
 - Keep this section short. The supervisor may compact older notes automatically.
 - Reproduced initial failure with `sh scripts/check-image-generation-pipeline.sh` before adding the doc; failure was `missing image generation pipeline doc`.
@@ -50,3 +50,5 @@ Failure signature: PRRT_kwDOR-A-2M56V13h
 - Pushed review-fix commit `1354b3c` (`Clarify notes handling in image prompt contract`) to `origin/codex/issue-75`.
 - Rechecked the current script and confirmed the README guard was still missing even though the doc guard existed.
 - Verified the new failure mode with a temporary copy of the script and doc but no README; the script now exits with `missing README: <temp path>`.
+- Committed the README guard fix as `81560c9` (`Add README guard to image pipeline check`) and pushed it to `origin/codex/issue-75`.
+- Post-push GraphQL review-thread check: `PRRT_kwDOR-A-2M56V0wn` is resolved, `PRRT_kwDOR-A-2M56V13h` remains unresolved but matches the now-pushed script change.
