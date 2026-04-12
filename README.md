@@ -21,6 +21,7 @@ The audio generation pipeline contract lives in [docs/audio-generation-pipeline.
 The canonical vocabulary item schema lives in [docs/vocabulary-item-schema.md](docs/vocabulary-item-schema.md).
 The pack schema lives in [docs/pack-schema.md](docs/pack-schema.md).
 The stage schema lives in [docs/stage-schema.md](docs/stage-schema.md).
+The pack assembly pipeline lives in [docs/pack-assembly-pipeline.md](docs/pack-assembly-pipeline.md).
 The mod contract lives in [docs/mod-contract.md](docs/mod-contract.md).
 The asset conventions live in [docs/asset-conventions.md](docs/asset-conventions.md).
 The QA strategy for content validation and gameplay verification lives in [docs/qa-strategy.md](docs/qa-strategy.md).
