@@ -41,6 +41,24 @@ Define the pronunciation-first recognition mode so implementation can present an
 - Avoid pairing multiple distractors that are near-duplicates of each other in the same prompt, because that tests interface scanning more than pronunciation recognition.
 - If the available pool is too small for ideal distractors, the implementation may reuse previously seen non-target items rather than inventing new content fields or synthetic schema requirements.
 
+## Similarity Selection Rules
+
+- Start from the same loaded pack or practice pool and rank candidate distractors by how likely they are to be mistaken for the target in a quick recognition round.
+- Favor candidates that share a broad semantic context with the target, such as common lesson theme, everyday situation, or nearby learner meaning, before considering more distant words.
+- Within that relevant pool, prefer distractors that differ from the target along only one or two major recognition axes instead of all axes at once.
+- Useful similarity axes include visible form, pronunciation pattern, or likely learner confusion, but no single prompt needs to match on every axis.
+- A good distractor set should mix one stronger competitor with one or more clearly related but less dangerous competitors so the learner has to listen carefully without facing a wall of near-clones.
+- If two distractors are so close to each other that they mostly compete with one another instead of with the target, replace one of them with a different relevant item.
+
+## Difficulty Control
+
+- Baseline difficulty should stay in the fair-recognition range: the learner should be able to answer by listening carefully after at least one prior exposure, without expert-level vocabulary discrimination.
+- Difficulty should rise by narrowing the gap between the target and the best distractor, not by filling the whole set with nearly identical alternatives.
+- Easier prompts may use distractors that share broad semantic context but clearly differ in pronunciation or visual identity.
+- Harder prompts may use one distractor that is close in sound, image category, or likely confusion pattern, as long as the remaining distractors still preserve a readable choice set.
+- The generator should avoid stacking multiple hardest-available distractors in the same prompt unless later product work explicitly introduces a separate hard-mode contract.
+- If the pool cannot support a fair hard set, the implementation should fall back to an easier but still relevant distractor mix instead of manufacturing artificial difficulty from weak content.
+
 ## Scoring and Retry Behavior
 
 - A correct first selection should count as a clean recognition success for the target.
