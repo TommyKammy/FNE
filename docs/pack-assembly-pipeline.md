@@ -18,7 +18,7 @@ The assembly pipeline starts from pack-local source material:
 - asset ids and file layout that follow [docs/asset-conventions.md](asset-conventions.md)
 - pack-level metadata such as `id`, `title`, `description`, and optional editorial `notes`
 
-Every input belongs to one pack directory under `content/packs/<pack-id>/`. The assembly step may combine multiple source files, but the output must resolve to one composed pack manifest shape described in [docs/pack-schema.md](pack-schema.md).
+Every input belongs to one pack directory under `content/packs/<pack-id>/`. The assembly step may combine multiple source files, but the output must resolve to one composed pack manifest shape described in [docs/pack-schema.md](pack-schema.md). When inputs are split across files, the assembler must still produce the same manifest bytes for the same pack-local content on every run.
 
 ## Source Layout
 
@@ -52,7 +52,13 @@ Manifest generation should be deterministic:
 3. Read the stage source and validate each entry against [docs/stage-schema.md](stage-schema.md).
 4. Read the mode source and collect the mode records available to the pack.
 5. Compose one manifest object with top-level `schemaVersion`, `id`, `title`, `description`, `vocabularyItems`, `stages`, `modes`, and optional `notes`.
-6. Write or expose that composed object in the pack shape defined by [docs/pack-schema.md](pack-schema.md).
+6. Apply one stable merge contract before writing output:
+   - Preserve authored order for any array that comes from one source array file.
+   - If `vocabularyItems` or `modes` are merged from multiple files, sort the emitted records by `id` ascending using bytewise string comparison.
+   - If split sources contribute the same `id` to `vocabularyItems`, `stages`, or `modes`, reject assembly instead of picking a winner implicitly.
+   - If a merged record set does not expose `id`, sort first by source file relative path and then by the record's original index inside that file.
+7. Write or expose that composed object in the pack shape defined by [docs/pack-schema.md](pack-schema.md).
+8. If the manifest is serialized to JSON, write object keys in a stable schema order so unchanged inputs produce byte-identical output across repeated runs.
 
 The generated manifest must remain the single structural contract consumed by loaders and runtime code.
 
@@ -65,6 +71,8 @@ Stage assignment decides which canonical vocabulary items appear in each stage a
 - A stage may reuse an item that appeared earlier in the pack, but reuse must happen by id reference instead of duplicating the item record.
 - `modeIds` should point to mode records that exist in the same pack assembly output.
 - Stage progression order is the array order in `stages`, so assembly should not reorder stages implicitly.
+- If stages are authored in one `stages.json` array, preserve that array order exactly.
+- If stages are split across multiple files, merge stage files by lexicographic relative path and preserve each file's in-file array order.
 - Unlock metadata may reference other stage ids, but those references must stay inside the same assembled pack.
 
 This keeps stage assignment explicit and makes generated packs composable without manual stitching after load.
