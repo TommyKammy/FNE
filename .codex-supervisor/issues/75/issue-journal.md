@@ -37,13 +37,14 @@ Failure signature: PRRT_kwDOR-A-2M56V0wn
 - Hypothesis: The remaining review blocker is a documentation contract mismatch, not a schema change; the correct fix is to bind optional `notes` explicitly into the prompt template while keeping `term` and `meaning` authoritative.
 - What changed: Added `Notes: {{notes}}` plus a non-authoritative mapping rule to `docs/image-generation-pipeline.md`, and strengthened `scripts/check-image-generation-pipeline.sh` to require both the placeholder and the guidance text.
 - Current blocker: none
-- Next exact step: Commit the review fix, push `codex/issue-75`, and clear the remaining PR #83 review thread if no further feedback appears.
+- Next exact step: Re-check PR #83 for any new feedback after commit `1354b3c`, and resolve or answer the remaining review thread if an operator explicitly wants GitHub write actions.
 - Verification gap: No broader aggregator script exists in this repo, so verification remains limited to the focused image-pipeline check plus adjacent contract checks.
 - Files touched: docs/image-generation-pipeline.md; scripts/check-image-generation-pipeline.sh
 - Rollback concern: low; changes are additive documentation and validation only.
-- Last focused command: sh scripts/check-ai-content-generation-contract.sh
+- Last focused command: git push origin codex/issue-75
 ### Scratchpad
 - Keep this section short. The supervisor may compact older notes automatically.
 - Reproduced initial failure with `sh scripts/check-image-generation-pipeline.sh` before adding the doc; failure was `missing image generation pipeline doc`.
 - Verified the CodeRabbit thread with `gh api graphql` and confirmed the only unresolved thread is `PRRT_kwDOR-A-2M56V0wn` on `docs/image-generation-pipeline.md`.
 - Local verification after the review fix: `sh scripts/check-image-generation-pipeline.sh`; `sh scripts/check-asset-conventions.sh`; `sh scripts/check-ai-content-generation-contract.sh`.
+- Pushed review-fix commit `1354b3c` (`Clarify notes handling in image prompt contract`) to `origin/codex/issue-75`.
