@@ -38,7 +38,7 @@ export class BootScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     const model = createBootSceneModel();
-    this.roundState = createRevealRoundState(model.item);
+    const roundSetup = createRevealRoundState(model.item);
 
     this.cameras.main.setBackgroundColor("#111927");
 
@@ -108,6 +108,16 @@ export class BootScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setVisible(false);
+
+    if (!roundSetup.ok) {
+      this.answerHintText.setText("This item needs a Latin-letter term before keyboard play can start.");
+      this.feedbackTitleText.setText("Content error");
+      this.feedbackTitleText.setColor(FAILURE_COLOR);
+      this.feedbackBodyText.setText(roundSetup.error.message);
+      return;
+    }
+
+    this.roundState = roundSetup.state;
 
     this.input.keyboard?.on("keydown", this.handleKeyDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

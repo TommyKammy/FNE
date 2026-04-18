@@ -14,6 +14,22 @@ export interface RevealRoundState {
   lastInput: string | null;
 }
 
+export interface RevealRoundContentError {
+  kind: "content-error";
+  itemId: string;
+  message: string;
+}
+
+export type RevealRoundSetupResult =
+  | {
+      ok: true;
+      state: RevealRoundState;
+    }
+  | {
+      ok: false;
+      error: RevealRoundContentError;
+    };
+
 function normalizeKeyboardLetter(key: string): string | null {
   if (key.length !== 1) {
     return null;
@@ -24,7 +40,7 @@ function normalizeKeyboardLetter(key: string): string | null {
   return /^[a-z]$/.test(normalized) ? normalized : null;
 }
 
-function getExpectedKey(term: string): string {
+function getExpectedKey(term: string): string | null {
   for (const character of term) {
     const normalizedCharacter = normalizeKeyboardLetter(character);
 
@@ -33,22 +49,36 @@ function getExpectedKey(term: string): string {
     }
   }
 
-  throw new Error(`Vocabulary item term "${term}" must contain at least one latin letter.`);
+  return null;
 }
 
-export function createRevealRoundState(item: VocabularyItem): RevealRoundState {
+export function createRevealRoundState(item: VocabularyItem): RevealRoundSetupResult {
   const expectedKey = getExpectedKey(item.term);
 
+  if (expectedKey === null) {
+    return {
+      ok: false,
+      error: {
+        kind: "content-error",
+        itemId: item.id,
+        message: `Vocabulary item "${item.id}" cannot start the reveal round because term "${item.term}" does not contain a Latin letter for keyboard judgment.`
+      }
+    };
+  }
+
   return {
-    itemId: item.id,
-    termLabel: item.term,
-    meaningLabel: item.meaning,
-    expectedKey,
-    phase: "ready",
-    audioCueRequestCount: 0,
-    feedbackTitle: "Ready to listen?",
-    feedbackBody: `Press Enter to hear the word, then type ${expectedKey.toUpperCase()}.`,
-    lastInput: null
+    ok: true,
+    state: {
+      itemId: item.id,
+      termLabel: item.term,
+      meaningLabel: item.meaning,
+      expectedKey,
+      phase: "ready",
+      audioCueRequestCount: 0,
+      feedbackTitle: "Ready to listen?",
+      feedbackBody: "Press Enter to hear the word, then type its first letter.",
+      lastInput: null
+    }
   };
 }
 
@@ -62,7 +92,7 @@ export function startRevealRound(state: RevealRoundState): RevealRoundState {
     phase: "awaiting-answer",
     audioCueRequestCount: state.audioCueRequestCount + 1,
     feedbackTitle: "Type the first letter",
-    feedbackBody: `Listen for the word, then press ${state.expectedKey.toUpperCase()}.`,
+    feedbackBody: "Listen for the word, then type its first letter.",
     lastInput: null
   };
 }
@@ -105,7 +135,7 @@ export function restartRevealRound(state: RevealRoundState): RevealRoundState {
     ...state,
     phase: "ready",
     feedbackTitle: "Ready to listen?",
-    feedbackBody: `Press Enter to hear the word, then type ${state.expectedKey.toUpperCase()}.`,
+    feedbackBody: "Press Enter to hear the word, then type its first letter.",
     lastInput: null
   };
 }
