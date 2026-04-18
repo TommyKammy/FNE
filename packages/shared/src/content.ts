@@ -156,17 +156,23 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
     throw new Error('Pack manifest field "stages" must be an array.');
   }
 
+  const validatedStages: PackStage[] = [];
+
   for (const stage of stages) {
     if (typeof stage !== "object" || stage === null || Array.isArray(stage)) {
       throw new Error("Pack stage must be an object.");
     }
 
     const stageRecord = stage as Record<string, unknown>;
+    const stageId = stageRecord["id"];
+    const stageTitle = stageRecord["title"];
+    const stageVocabularyItemIds = stageRecord["vocabularyItemIds"];
+    const stageModeIds = stageRecord["modeIds"];
 
-    assertNonEmptyString(stageRecord["id"], "id", "Pack stage");
-    assertNonEmptyString(stageRecord["title"], "title", "Pack stage");
-    assertStringArray(stageRecord["vocabularyItemIds"], "vocabularyItemIds", "Pack stage");
-    assertStringArray(stageRecord["modeIds"], "modeIds", "Pack stage");
+    assertNonEmptyString(stageId, "id", "Pack stage");
+    assertNonEmptyString(stageTitle, "title", "Pack stage");
+    assertStringArray(stageVocabularyItemIds, "vocabularyItemIds", "Pack stage");
+    assertStringArray(stageModeIds, "modeIds", "Pack stage");
 
     const allowedFields = new Set<string>(REQUIRED_PACK_STAGE_FIELDS);
 
@@ -175,6 +181,13 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
         throw new Error(`Pack stage field "${fieldName}" is not allowed.`);
       }
     }
+
+    validatedStages.push({
+      id: stageId,
+      title: stageTitle,
+      vocabularyItemIds: stageVocabularyItemIds,
+      modeIds: stageModeIds
+    });
   }
 
   const modes = record["modes"];
@@ -183,22 +196,52 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
     throw new Error('Pack manifest field "modes" must be an array.');
   }
 
+  const validatedModes: PackMode[] = [];
+
   for (const mode of modes) {
     if (typeof mode !== "object" || mode === null || Array.isArray(mode)) {
       throw new Error("Pack mode must be an object.");
     }
 
     const modeRecord = mode as Record<string, unknown>;
+    const modeId = modeRecord["id"];
+    const modeLabel = modeRecord["label"];
+    const modeDescription = modeRecord["description"];
 
-    for (const fieldName of REQUIRED_PACK_MODE_FIELDS) {
-      assertNonEmptyString(modeRecord[fieldName], fieldName, "Pack mode");
-    }
+    assertNonEmptyString(modeId, "id", "Pack mode");
+    assertNonEmptyString(modeLabel, "label", "Pack mode");
+    assertNonEmptyString(modeDescription, "description", "Pack mode");
 
     const allowedFields = new Set<string>(REQUIRED_PACK_MODE_FIELDS);
 
     for (const fieldName of Object.keys(modeRecord)) {
       if (!allowedFields.has(fieldName)) {
         throw new Error(`Pack mode field "${fieldName}" is not allowed.`);
+      }
+    }
+
+    validatedModes.push({
+      id: modeId,
+      label: modeLabel,
+      description: modeDescription
+    });
+  }
+
+  const vocabularyItemIds = new Set(vocabularyItems.map((item) => (item as VocabularyItem).id));
+  const modeIds = new Set(validatedModes.map((mode) => mode.id));
+
+  for (const stage of validatedStages) {
+    for (const vocabularyItemId of stage.vocabularyItemIds) {
+      if (!vocabularyItemIds.has(vocabularyItemId)) {
+        throw new Error(
+          `Pack stage "${stage.id}" references unknown vocabulary item "${vocabularyItemId}".`
+        );
+      }
+    }
+
+    for (const modeId of stage.modeIds) {
+      if (!modeIds.has(modeId)) {
+        throw new Error(`Pack stage "${stage.id}" references unknown mode "${modeId}".`);
       }
     }
   }

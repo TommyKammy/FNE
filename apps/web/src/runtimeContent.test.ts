@@ -154,4 +154,76 @@ describe("demo runtime content", () => {
       'Pack mode field "label" must be a non-empty string.'
     );
   });
+
+  it("rejects stage references that point outside declared items and modes", () => {
+    const manifestWithUnknownStageItem: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["banana"],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+    const manifestWithUnknownStageMode: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["apple"],
+          modeIds: ["boss"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+
+    expect(() => assertValidPackManifest(manifestWithUnknownStageItem)).toThrow(
+      'Pack stage "stage-fruit-1" references unknown vocabulary item "banana".'
+    );
+    expect(() => assertValidPackManifest(manifestWithUnknownStageMode)).toThrow(
+      'Pack stage "stage-fruit-1" references unknown mode "boss".'
+    );
+  });
 });
