@@ -45,6 +45,9 @@ check_doc "queue weak words only after the stage has offered each scheduled item
 check_doc "fresh prompt under that mode's normal rules"
 check_doc "closes the first learning cycle cleanly"
 check_doc "future spaced repetition layers should extend this same weak-word state"
+check_doc "at most two review resurfacing passes in the same stage"
+check_doc "can appear no more than twice in the review loop after its first-pass exposure"
+check_doc "must move to summary or future follow-up instead of entering a third review resurfacing pass"
 check_readme "docs/review-loop.md"
 
 printf 'Review loop check passed\n'
