@@ -58,6 +58,7 @@ This strategy is written for the planning-stage repo structure, where `docs/` de
 ## Manual Playtest Expectations
 
 - Manual playtests are required for first-playable work even when schema and gameplay checks pass.
+- `docs/poc-evaluation-criteria.md` defines the shared pass/fail rubric and notes shape for deciding whether a playable PoC is ready for first external playtests.
 - A first-playable playtest should confirm:
   - the learner can start and finish one short stage without facilitator translation
   - image, audio, and prompt timing are understandable on first contact
