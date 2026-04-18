@@ -13,7 +13,7 @@ The KPI set should stay narrow enough to review from planning docs alone and mea
 - The review anchor is the first 10 minutes after the learner takes the launch action from [docs/first-launch-flow.md](first-launch-flow.md).
 - That window should cover the first guided success, the first recognition follow-up, and the learner reaching a first Battle Mode exposure if the default stage loop proceeds as planned.
 - The KPI definitions should stay compatible with the current stage sequence already implied by [docs/learn-mode.md](learn-mode.md), [docs/listen-and-match-mode.md](listen-and-match-mode.md), [docs/battle-mode.md](battle-mode.md), and [docs/review-loop.md](review-loop.md).
-- V1 measurement should assume only timestamped client events from a single-session browser run or a later return session. It should not depend on a no account system becoming a named learner profile, and it should remain reviewable without assuming a backend.
+- V1 measurement should assume only timestamped client events from a single-session browser run or a later return session. It should not depend on a no-account system becoming a named learner profile, and it should remain reviewable without assuming a backend.
 
 ## Measurement Boundary
 
