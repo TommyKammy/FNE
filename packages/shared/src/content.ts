@@ -57,6 +57,21 @@ const REQUIRED_PACK_MANIFEST_FIELDS = [
 const REQUIRED_PACK_STAGE_FIELDS = ["id", "title", "vocabularyItemIds", "modeIds"] as const;
 const REQUIRED_PACK_MODE_FIELDS = ["id", "label", "description"] as const;
 
+function assertNoDuplicateIds(
+  ids: Iterable<string>,
+  duplicateLabel: "vocabulary item" | "stage" | "mode"
+): void {
+  const seenIds = new Set<string>();
+
+  for (const id of ids) {
+    if (seenIds.has(id)) {
+      throw new Error(`Pack manifest contains duplicate ${duplicateLabel} id "${id}".`);
+    }
+
+    seenIds.add(id);
+  }
+}
+
 function assertNonEmptyString(
   value: unknown,
   fieldName: string,
@@ -226,6 +241,13 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
       description: modeDescription
     });
   }
+
+  assertNoDuplicateIds(
+    (vocabularyItems as VocabularyItem[]).map((item) => item.id),
+    "vocabulary item"
+  );
+  assertNoDuplicateIds(validatedStages.map((stage) => stage.id), "stage");
+  assertNoDuplicateIds(validatedModes.map((mode) => mode.id), "mode");
 
   const vocabularyItemIds = new Set(vocabularyItems.map((item) => (item as VocabularyItem).id));
   const modeIds = new Set(validatedModes.map((mode) => mode.id));

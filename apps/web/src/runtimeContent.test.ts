@@ -226,4 +226,129 @@ describe("demo runtime content", () => {
       'Pack stage "stage-fruit-1" references unknown mode "boss".'
     );
   });
+
+  it("rejects duplicate declared vocabulary item, stage, and mode ids", () => {
+    const manifestWithDuplicateVocabularyItemId: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        },
+        {
+          id: "apple",
+          term: "green apple",
+          meaning: "青りんご",
+          pronunciation: "GREEN AP-uhl",
+          imageAssetId: "img-green-apple",
+          audioAssetId: "aud-green-apple"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["apple"],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+    const manifestWithDuplicateStageId: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["apple"],
+          modeIds: ["practice"]
+        },
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Review",
+          vocabularyItemIds: ["apple"],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+    const manifestWithDuplicateModeId: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["apple"],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        },
+        {
+          id: "practice",
+          label: "Boss",
+          description: "fixture"
+        }
+      ]
+    };
+
+    expect(() => assertValidPackManifest(manifestWithDuplicateVocabularyItemId)).toThrow(
+      'Pack manifest contains duplicate vocabulary item id "apple".'
+    );
+    expect(() => assertValidPackManifest(manifestWithDuplicateStageId)).toThrow(
+      'Pack manifest contains duplicate stage id "stage-fruit-1".'
+    );
+    expect(() => assertValidPackManifest(manifestWithDuplicateModeId)).toThrow(
+      'Pack manifest contains duplicate mode id "practice".'
+    );
+  });
 });
