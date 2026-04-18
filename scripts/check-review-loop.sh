@@ -48,6 +48,10 @@ check_doc "future spaced repetition layers should extend this same weak-word sta
 check_doc "at most two review resurfacing passes in the same stage"
 check_doc "can appear no more than twice in the review loop after its first-pass exposure"
 check_doc "must move to summary or future follow-up instead of entering a third review resurfacing pass"
+check_doc "prioritize weak words by the order their first-pass outcomes marked them weak"
+check_doc "supported-repeat and unresolved items share the same review queue"
+check_doc "must not let one failure pattern monopolize the limited review slots"
+check_doc "when review capacity runs short, every queued weak word should receive its first resurfacing before any item claims a second review resurfacing"
 check_readme "docs/review-loop.md"
 
 printf 'Review loop check passed\n'
