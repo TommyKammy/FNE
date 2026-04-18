@@ -37,13 +37,19 @@ The KPI set should stay narrow enough to review from planning docs alone and mea
 
 ### Replay Rate
 
-- `replay rate` measures how often a learner starts another playable loop after completing the first one.
-- The numerator should count sessions that trigger a replay within the same visit or start a later return session after a previous completed loop.
-- The denominator should count sessions that reached at least the first guided success, because a learner cannot meaningfully replay a loop they never completed once.
-- Same-visit replay and later return session replay should be tracked separately because they signal different kinds of engagement:
+- Track replay as two separate rates with explicit formulas so the same-visit and return-session variants stay comparable.
+- `same-visit replay rate` should use:
+  - numerator = visits where the learner reaches the first guided success and then starts a fresh stage or another full loop in that same visit
+  - denominator = visits that reached the first guided success
+  - eligibility window = the same visit, ending at inactivity timeout, explicit exit, tab close, or refresh
+- `return-session replay rate` should use:
+  - numerator = return sessions that start a fresh stage or another full loop after a prior visit completed the first guided success
+  - denominator = unique prior visits that reached the first guided success and became eligible for return measurement
+  - eligibility window = a later return session identified by a new visit ID or a gap of more than 30 minutes, counted within the agreed review window
+- Both replay rates should exclude intra-item actions such as re-hearing pronunciation, replaying a prompt animation, or tapping a support control without starting a new stage or full loop.
+- Report `same-visit replay rate` and `return-session replay rate` separately because they signal different kinds of engagement:
   - `same-visit replay rate` captures immediate willingness to try another loop while the novelty moment is still fresh
   - `return-session replay rate` captures whether the experience was strong enough for the learner to come back later
-- A replay should mean a fresh start of another stage or another full loop, not just re-hearing pronunciation or tapping a support control inside the current item.
 
 ### First Battle Replay Intent
 
