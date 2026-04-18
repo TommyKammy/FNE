@@ -21,9 +21,13 @@ Define how incorrect, unresolved, or weak items come back for practice so implem
 
 - The review loop should queue weak words only after the stage has offered each scheduled item one first-pass exposure in its planned order.
 - The first review pass should requeue each weak word once in the order the learner originally weakened it, so the learner sees a short and understandable recovery sequence instead of a reshuffled backlog.
+- The review planner should prioritize weak words by the order their first-pass outcomes marked them weak, regardless of whether the item entered from a supported repeat, retry-reduced clear, or unresolved result.
+- The rule is that supported-repeat and unresolved items share the same review queue, because review priority should come from the authoritative weak-word event order, not from a derived severity tier that overweights one failure pattern.
 - The baseline review loop allows at most two review resurfacing passes in the same stage after the first-pass exposure cycle is complete.
 - If a resurfaced weak word is cleared cleanly on its review pass, it leaves the current-stage review queue.
 - A weak word can appear no more than twice in the review loop after its first-pass exposure, which means the learner sees at most the first review resurfacing and one final short recovery resurfacing for that item in the same stage.
+- The review planner must not let one failure pattern monopolize the limited review slots; a cluster of early supported repeats cannot keep later unresolved weak words from receiving their own first resurfacing.
+- The review planner should ensure that when review capacity runs short, every queued weak word should receive its first resurfacing before any item claims a second review resurfacing, so the repetition limit stays fair across the whole weak-word set.
 - If a resurfaced weak word still resolves with support, retry reduction, or unresolved status after its second review resurfacing, it must move to summary or future follow-up instead of entering a third review resurfacing pass.
 - When the stage reaches this explicit short review limit and some weak words are still unresolved, the stage should mark them for summary or future follow-up rather than silently dropping them.
 
