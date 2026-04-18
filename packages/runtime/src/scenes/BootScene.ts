@@ -1,10 +1,11 @@
 import Phaser from "phaser";
 import { createBootSceneModel } from "../demo-content";
 import {
+  advanceRevealRound,
+  beginRevealRound,
   createRevealRoundState,
   judgeRevealRoundInput,
   restartRevealRound,
-  startRevealRound,
   type RevealRoundState
 } from "../reveal-round";
 
@@ -131,16 +132,18 @@ export class BootScene extends Phaser.Scene {
     const normalizedKey = event.key.toLowerCase();
 
     if (normalizedKey === "enter") {
-      if (this.roundState.phase === "ready") {
-        this.roundState = startRevealRound(this.roundState);
-        this.playPronunciationCue();
-        this.renderRoundState();
-        return;
-      }
+      if (this.roundState.phase === "idle" || this.roundState.phase === "judged") {
+        const idleState =
+          this.roundState.phase === "judged"
+            ? restartRevealRound(this.roundState)
+            : this.roundState;
 
-      if (this.roundState.phase === "success" || this.roundState.phase === "failure") {
-        this.roundState = startRevealRound(restartRevealRound(this.roundState));
+        const revealingState = beginRevealRound(idleState);
+
+        this.roundState = revealingState;
+        this.renderRoundState();
         this.playPronunciationCue();
+        this.roundState = advanceRevealRound(revealingState);
         this.renderRoundState();
       }
 
@@ -165,22 +168,22 @@ export class BootScene extends Phaser.Scene {
     this.feedbackBodyText.setText(this.roundState.feedbackBody);
 
     switch (this.roundState.phase) {
-      case "ready":
+      case "idle":
         this.feedbackTitleText.setColor(NEUTRAL_COLOR);
         this.outcomeWordText.setVisible(false);
         break;
-      case "awaiting-answer":
+      case "revealing":
         this.feedbackTitleText.setColor(NEUTRAL_COLOR);
         this.outcomeWordText.setVisible(false);
         break;
-      case "success":
-        this.feedbackTitleText.setColor(SUCCESS_COLOR);
-        this.outcomeWordText
-          .setText(`${this.roundState.termLabel} (${this.roundState.meaningLabel})`)
-          .setVisible(true);
+      case "awaiting-input":
+        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
+        this.outcomeWordText.setVisible(false);
         break;
-      case "failure":
-        this.feedbackTitleText.setColor(FAILURE_COLOR);
+      case "judged":
+        this.feedbackTitleText.setColor(
+          this.roundState.judgment === "success" ? SUCCESS_COLOR : FAILURE_COLOR
+        );
         this.outcomeWordText
           .setText(`${this.roundState.termLabel} (${this.roundState.meaningLabel})`)
           .setVisible(true);
