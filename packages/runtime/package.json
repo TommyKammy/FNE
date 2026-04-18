@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./demo-content": "./src/demo-content.ts"
+    "./demo-content": "./src/demo-content.ts",
+    "./reveal-round": "./src/reveal-round.ts"
   },
   "scripts": {
     "typecheck": "tsc --project tsconfig.json --noEmit"
