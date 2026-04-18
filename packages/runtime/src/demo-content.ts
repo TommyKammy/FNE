@@ -1,4 +1,9 @@
-import { assertValidVocabularyItem, type PackManifest, type VocabularyItem } from "@fne/shared";
+import {
+  assertValidPackManifest,
+  assertValidVocabularyItem,
+  type PackManifest,
+  type VocabularyItem
+} from "@fne/shared";
 import demoPackManifestJson from "./content/demo-pack/manifest.json";
 
 export interface RuntimeDemoItem {
@@ -20,7 +25,8 @@ type AssetDirectory = "images" | "audio";
 
 export type DemoRuntimeItemLoader = () => RuntimeDemoItem;
 
-const DEMO_PACK_MANIFEST = demoPackManifestJson as PackManifest;
+assertValidPackManifest(demoPackManifestJson);
+const DEMO_PACK_MANIFEST = demoPackManifestJson;
 
 function createAssetPath(
   packId: string,
@@ -31,33 +37,38 @@ function createAssetPath(
   return `/content/packs/${packId}/assets/${assetDirectory}/${assetId}.${extension}`;
 }
 
-function getFirstDemoItem(): VocabularyItem {
-  const item = DEMO_PACK_MANIFEST.vocabularyItems[0];
+export function loadRuntimeItemFromManifest(manifest: PackManifest): RuntimeDemoItem {
+  const stage = manifest.stages[0];
+
+  if (stage === undefined) {
+    throw new Error(`Pack "${manifest.id}" must contain at least one stage.`);
+  }
+
+  const stageItemId = stage.vocabularyItemIds[0];
+
+  if (stageItemId === undefined) {
+    throw new Error(`Stage "${stage.id}" must reference at least one vocabulary item id.`);
+  }
+
+  const item = manifest.vocabularyItems.find((candidate) => candidate.id === stageItemId);
 
   if (item === undefined) {
-    throw new Error(`Pack "${DEMO_PACK_MANIFEST.id}" must contain at least one vocabulary item.`);
+    throw new Error(`Stage "${stage.id}" references unknown vocabulary item "${stageItemId}".`);
   }
 
   assertValidVocabularyItem(item);
 
-  return item;
+  return {
+    packId: manifest.id,
+    stageId: stage.id,
+    item,
+    imageSrc: createAssetPath(manifest.id, "images", item.imageAssetId, "svg"),
+    audioSrc: createAssetPath(manifest.id, "audio", item.audioAssetId, "wav")
+  };
 }
 
 export function loadDemoRuntimeItem(): RuntimeDemoItem {
-  const item = getFirstDemoItem();
-  const stage = DEMO_PACK_MANIFEST.stages[0];
-
-  if (stage === undefined) {
-    throw new Error(`Pack "${DEMO_PACK_MANIFEST.id}" must contain at least one stage.`);
-  }
-
-  return {
-    packId: DEMO_PACK_MANIFEST.id,
-    stageId: stage.id,
-    item,
-    imageSrc: createAssetPath(DEMO_PACK_MANIFEST.id, "images", item.imageAssetId, "svg"),
-    audioSrc: createAssetPath(DEMO_PACK_MANIFEST.id, "audio", item.audioAssetId, "wav")
-  };
+  return loadRuntimeItemFromManifest(DEMO_PACK_MANIFEST);
 }
 
 export function createBootSceneModel(
