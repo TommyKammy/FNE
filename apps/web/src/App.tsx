@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { type CSSProperties, useEffect, useRef } from "react";
 import { mountRuntime } from "@fne/runtime";
 import { SHELL_HEIGHT_PX, SHELL_WIDTH_PX } from "@fne/shared";
 import "./app.css";
@@ -38,7 +38,7 @@ export function App() {
             {
               "--shell-width": `${SHELL_WIDTH_PX}px`,
               "--shell-height": `${SHELL_HEIGHT_PX}px`
-            } as React.CSSProperties
+            } as CSSProperties
           }
         />
       </section>

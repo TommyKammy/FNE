@@ -3,7 +3,7 @@
   background:
     radial-gradient(circle at top, rgba(255, 196, 118, 0.22), transparent 38%),
     linear-gradient(180deg, #1d2638 0%, #0f141d 100%);
-  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
 }
 
 * {
