@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "demo-pack",
+  "title": "Demo Pack",
+  "description": "One starter item wired through the runtime loader seam.",
+  "vocabularyItems": [
+    {
+      "id": "apple",
+      "term": "apple",
+      "meaning": "りんご",
+      "pronunciation": "AP-uhl",
+      "imageAssetId": "img-apple",
+      "audioAssetId": "aud-apple",
+      "exampleSentence": "I eat an apple.",
+      "partOfSpeech": "noun",
+      "tags": ["fruit", "food"],
+      "notes": "First demo content fixture."
+    }
+  ],
+  "stages": [
+    {
+      "id": "stage-fruit-1",
+      "title": "Fruit Basics",
+      "vocabularyItemIds": ["apple"],
+      "modeIds": ["practice"]
+    }
+  ],
+  "modes": [
+    {
+      "id": "practice",
+      "label": "Practice",
+      "description": "Low-pressure learning mode for the first playable seam."
+    }
+  ]
+}

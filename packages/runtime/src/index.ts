@@ -2,6 +2,14 @@ import Phaser from "phaser";
 import { SHELL_HEIGHT_PX, SHELL_WIDTH_PX, type RuntimeMount } from "@fne/shared";
 import { BootScene } from "./scenes/BootScene";
 
+export {
+  createBootSceneModel,
+  loadDemoRuntimeItem,
+  type BootSceneModel,
+  type DemoRuntimeItemLoader,
+  type RuntimeDemoItem
+} from "./demo-content";
+
 export function mountRuntime(container: HTMLElement): RuntimeMount {
   const game = new Phaser.Game({
     type: Phaser.AUTO,

@@ -4,3 +4,5 @@ export const SHELL_HEIGHT_PX = 540;
 export interface RuntimeMount {
   destroy(): void;
 }
+
+export * from "./content";
