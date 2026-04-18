@@ -8,10 +8,12 @@ The issue template style for future epics and implementation tickets lives in [d
 The staged delivery plan from planning docs to the first browser PoC lives in [docs/milestone-roadmap.md](docs/milestone-roadmap.md).
 The PoC-era release posture for internal preview builds lives in [docs/release-posture.md](docs/release-posture.md).
 The Learn Mode behavior spec lives in [docs/learn-mode.md](docs/learn-mode.md).
+The learning KPI definitions for recognition and repetition signals live in [docs/learning-kpis.md](docs/learning-kpis.md).
 The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-loop.md).
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
 The Listen & Match Mode behavior spec lives in [docs/listen-and-match-mode.md](docs/listen-and-match-mode.md).
 The parent observation planning spec lives in [docs/parent-observation.md](docs/parent-observation.md).
+The engagement KPI planning spec lives in [docs/engagement-kpis.md](docs/engagement-kpis.md).
 The metric capture-point map for parent observation and gameplay outcomes lives in [docs/measurement-points.md](docs/measurement-points.md).
 The shared visual readability and input simplicity rules live in [docs/ux-rules.md](docs/ux-rules.md).
 The practical accessibility baseline lives in [docs/accessibility-baseline.md](docs/accessibility-baseline.md).

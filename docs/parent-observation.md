@@ -10,7 +10,7 @@ Define the smallest planning slice that lets a parent notice whether the learner
 
 - This planning pass covers only lightweight parent observation ideas that can be derived from the learner's normal stage and review outcomes.
 - The goal is to make later progress visibility easier to design, not to add parent-facing accounts, notifications, dashboards, or cross-device syncing in v1.
-- The scope should stay compatible with [docs/learn-mode.md](learn-mode.md), [docs/review-loop.md](review-loop.md), and the browser-first assumptions already documented elsewhere in the repo.
+- The scope should stay compatible with [docs/learn-mode.md](learn-mode.md), [docs/review-loop.md](review-loop.md), [docs/learning-kpis.md](learning-kpis.md), and the browser-first assumptions already documented elsewhere in the repo.
 
 ## Candidate v1 Progress Metrics
 
@@ -19,6 +19,7 @@ Define the smallest planning slice that lets a parent notice whether the learner
 - `weak words still active` gives a compact view of whether the current stage ended with unresolved recovery items that may need more practice later.
 - `clean first-pass items versus supported clears` gives a rough distinction between confident recall and progress that still needed help, without introducing a full mastery model.
 - `most recent practice date` gives a parent a basic recency signal without requiring streak pressure, attendance rules, or scheduled reminders.
+- [docs/learning-kpis.md](learning-kpis.md) defines the learner-facing recognition accuracy, retry rate, and weak word frequency signals that later parent summaries may compress into simpler labels.
 
 ## V1 Planning Scope
 
