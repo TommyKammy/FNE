@@ -17,6 +17,8 @@ For this project, an internal preview build counts as ready when:
 - reviewers can name what is playable now, what is observable now, and what is intentionally deferred
 - manual playtest review can happen without inventing packaging or release-channel assumptions
 
+The separate first external playtest bar lives in `docs/poc-evaluation-criteria.md` so build posture and evaluation outcomes stay explicit instead of being inferred from release language alone.
+
 ## Versioning Expectations
 PoC-era builds should use `0.x` versioning to signal that the project is still validating scope and behavior rather than locking a stable release contract.
 
