@@ -10,8 +10,10 @@ Define how incorrect, unresolved, or weak items come back for practice so implem
 
 - A weak word is a scheduled vocabulary item that still needs end-of-cycle review because the learner did not show a clean first-pass result.
 - A supported repeat in Learn Mode marks the item as weak for the current stage, even if the learner eventually clears the item on that repeat, because the first guided pass was not enough.
+- A supported repeat in Learn Mode or Listen & Match retry clear marks the item as weak for the current stage even though the learner advanced, because the first-pass result was not clean.
 - An unresolved target in Listen & Match marks the item as weak for the current stage because the learner could not complete the recognition prompt within the mode's allowed retry structure.
-- A failed Battle Mode phrase or stage-ending failure on an active vocabulary item marks that item as weak for the current stage because the learner did not hold the cue successfully in the higher-pressure context.
+- A Battle Mode phrase-weakened result marks the active vocabulary item as weak for the current stage even if the stage continues.
+- A Battle Mode stage-ending meter failure on an active vocabulary item marks that item as weak for the current stage and leaves the stage unresolved for this pass.
 - A clean first-pass clear in the active mode does not mark the item as weak.
 - Weak-word status belongs to the learner's current run outcome, not to permanent pack authoring metadata or a new vocabulary-item schema field.
 
@@ -35,6 +37,7 @@ Define how incorrect, unresolved, or weak items come back for practice so implem
 ## Mode Compatibility
 
 - This loop should work with existing mode boundaries by consuming outcome signals that the mode specs already imply, not by rewriting those mode rules.
+- The review loop should consume the same clean, supported, weakened, or unresolved outcome labels that the active mode reports, so weak-word entry stays explicit instead of being reconstructed from ambiguous miss counters.
 - Learn Mode remains the first-exposure mode, while the review loop decides whether an item returns later in the same stage after that first exposure cycle.
 - Listen & Match and Battle Mode keep their own retry and failure behavior; the review loop only decides whether unresolved items re-enter practice after the first pass is over.
 - Stage and pack schemas do not need new required fields for the baseline loop, because the queue can be built from existing stage item order, mode order, and runtime outcomes.

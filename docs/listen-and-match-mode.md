@@ -69,6 +69,13 @@ Define the pronunciation-first recognition mode so implementation can present an
 - If the learner misses again after the supported retry, the mode should reveal the correct answer, log the target as unresolved for this pass, and move forward instead of trapping the learner in an infinite loop.
 - Stage-level scoring may weight first-try clears, retry clears, and unresolved targets differently, but the mode contract must preserve this ordering of outcomes.
 
+## Weak-Word Scoring Boundary
+
+- A correct first selection is a clean first-pass clear and does not mark the target as weak.
+- A correct retry clears the target with reduced credit but still marks it as a weak word for the current stage.
+- A second miss after the supported retry marks the target as a weak word and leaves it unresolved for this pass.
+- Listen & Match should report these outcomes explicitly so the review loop can distinguish clean first-pass clears from supported clears and unresolved targets.
+
 ## Standalone and Stage Use
 
 - As a standalone practice loop, Listen & Match may queue a short run of targets and summarize first-try clears, retry clears, and unresolved targets at the end.

@@ -66,6 +66,13 @@ Define the first-exposure learner flow for Learn Mode so implementation can sequ
 - A stage in Learn Mode counts as cleared when every scheduled item has been passed at least once through this guided flow.
 - Learn Mode completion should be clear enough for implementation even if the broader stage scoring model changes later.
 
+## Weak-Word Scoring Boundary
+
+- A first-try success is a clean first-pass clear and does not mark the item as weak.
+- A supported repeat clears the item for immediate progression but still marks it as a weak word for the current stage.
+- Learn Mode should report this supported-repeat outcome explicitly so the review loop can distinguish it from a clean first-pass clear.
+- Learn Mode should never treat the first guided miss as a stage failure, but it also should not hide that the item needed support.
+
 ## Implementation Boundaries
 
 - Learn Mode defines reveal order, cue timing intent, feedback posture, and pass conditions.
