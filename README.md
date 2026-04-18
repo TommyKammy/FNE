@@ -11,6 +11,7 @@ The PoC evaluation bar for first external playtests lives in [docs/poc-evaluatio
 The Learn Mode behavior spec lives in [docs/learn-mode.md](docs/learn-mode.md).
 The learning KPI definitions for recognition and repetition signals live in [docs/learning-kpis.md](docs/learning-kpis.md).
 The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-loop.md).
+The transition note from the v1 review loop to future persistence and spaced-repetition systems lives in [docs/review-loop-transition.md](docs/review-loop-transition.md).
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
 The Listen & Match Mode behavior spec lives in [docs/listen-and-match-mode.md](docs/listen-and-match-mode.md).
 The parent observation planning spec lives in [docs/parent-observation.md](docs/parent-observation.md).
