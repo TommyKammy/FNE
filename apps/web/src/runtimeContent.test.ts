@@ -1,4 +1,9 @@
-import { assertValidVocabularyItem, type PackManifest, type VocabularyItem } from "@fne/shared";
+import {
+  assertValidPackManifest,
+  assertValidVocabularyItem,
+  type PackManifest,
+  type VocabularyItem
+} from "@fne/shared";
 import {
   createBootSceneModel,
   loadDemoRuntimeItem,
@@ -89,5 +94,64 @@ describe("demo runtime content", () => {
     expect(runtimeItem.item.id).toBe("apple");
     expect(runtimeItem.imageSrc).toBe("/content/packs/demo-pack/assets/images/img-apple.svg");
     expect(runtimeItem.audioSrc).toBe("/content/packs/demo-pack/assets/audio/aud-apple.wav");
+  });
+
+  it("reports pack-specific validation errors instead of vocabulary-item prefixes", () => {
+    const manifestMissingTitle: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: " ",
+      description: "fixture",
+      vocabularyItems: [],
+      stages: [],
+      modes: []
+    };
+    const manifestWithInvalidStageItemId: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: [" "],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+    const manifestWithInvalidModeLabel: unknown = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [],
+      stages: [],
+      modes: [
+        {
+          id: "practice",
+          label: " ",
+          description: "fixture"
+        }
+      ]
+    };
+
+    expect(() => assertValidPackManifest(manifestMissingTitle)).toThrow(
+      'Pack manifest field "title" must be a non-empty string.'
+    );
+    expect(() => assertValidPackManifest(manifestWithInvalidStageItemId)).toThrow(
+      'Pack stage field "vocabularyItemIds" must be a non-empty string.'
+    );
+    expect(() => assertValidPackManifest(manifestWithInvalidModeLabel)).toThrow(
+      'Pack mode field "label" must be a non-empty string.'
+    );
   });
 });

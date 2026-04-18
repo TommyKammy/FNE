@@ -57,9 +57,13 @@ const REQUIRED_PACK_MANIFEST_FIELDS = [
 const REQUIRED_PACK_STAGE_FIELDS = ["id", "title", "vocabularyItemIds", "modeIds"] as const;
 const REQUIRED_PACK_MODE_FIELDS = ["id", "label", "description"] as const;
 
-function assertNonEmptyString(value: unknown, fieldName: string): asserts value is string {
+function assertNonEmptyString(
+  value: unknown,
+  fieldName: string,
+  errorPrefix = "Vocabulary item"
+): asserts value is string {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error(`Vocabulary item field "${fieldName}" must be a non-empty string.`);
+    throw new Error(`${errorPrefix} field "${fieldName}" must be a non-empty string.`);
   }
 }
 
@@ -73,7 +77,7 @@ function assertStringArray(
   }
 
   for (const entry of value) {
-    assertNonEmptyString(entry, fieldName);
+    assertNonEmptyString(entry, fieldName, errorPrefix);
   }
 }
 
@@ -127,7 +131,7 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
   const record = manifest as Record<string, unknown>;
 
   for (const fieldName of ["id", "title", "description"] as const) {
-    assertNonEmptyString(record[fieldName], fieldName);
+    assertNonEmptyString(record[fieldName], fieldName, "Pack manifest");
   }
 
   const schemaVersion = record["schemaVersion"];
@@ -159,8 +163,8 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
 
     const stageRecord = stage as Record<string, unknown>;
 
-    assertNonEmptyString(stageRecord["id"], "id");
-    assertNonEmptyString(stageRecord["title"], "title");
+    assertNonEmptyString(stageRecord["id"], "id", "Pack stage");
+    assertNonEmptyString(stageRecord["title"], "title", "Pack stage");
     assertStringArray(stageRecord["vocabularyItemIds"], "vocabularyItemIds", "Pack stage");
     assertStringArray(stageRecord["modeIds"], "modeIds", "Pack stage");
 
@@ -187,7 +191,7 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
     const modeRecord = mode as Record<string, unknown>;
 
     for (const fieldName of REQUIRED_PACK_MODE_FIELDS) {
-      assertNonEmptyString(modeRecord[fieldName], fieldName);
+      assertNonEmptyString(modeRecord[fieldName], fieldName, "Pack mode");
     }
 
     const allowedFields = new Set<string>(REQUIRED_PACK_MODE_FIELDS);
@@ -200,7 +204,7 @@ export function assertValidPackManifest(manifest: unknown): asserts manifest is 
   }
 
   if (record["notes"] !== undefined) {
-    assertNonEmptyString(record["notes"], "notes");
+    assertNonEmptyString(record["notes"], "notes", "Pack manifest");
   }
 
   const allowedFields = new Set<string>([
