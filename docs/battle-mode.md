@@ -120,6 +120,13 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - A stage fails when the meter fully empties before the chart ends.
 - On failure, the mode should offer a fast restart or return path without losing browser-session progress outside the current run.
 
+## Weak-Word Scoring Boundary
+
+- A phrase-resolved result without meter failure is a clean first-pass clear for that active vocabulary item and does not mark it as weak.
+- A phrase-weakened result marks the active vocabulary item as a weak word even if the stage continues.
+- A stage-ending meter failure marks the active vocabulary item as a weak word and leaves the stage unresolved.
+- Battle Mode should report these boundaries from the active vocabulary phrase outcome instead of inferring weak-word state from generic combo loss or temporary miss feedback alone.
+
 ## Implementation Boundaries
 
 - Battle Mode defines lane count, count structure, vocabulary cue cadence, combo behavior, and fail-state intent.
