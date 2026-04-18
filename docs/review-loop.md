@@ -13,7 +13,7 @@ Define how incorrect, unresolved, or weak items come back for practice so implem
 - A supported repeat in Learn Mode or Listen & Match retry clear marks the item as weak for the current stage even though the learner advanced, because the first-pass result was not clean.
 - An unresolved target in Listen & Match marks the item as weak for the current stage because the learner could not complete the recognition prompt within the mode's allowed retry structure.
 - A Battle Mode phrase-weakened result marks the active vocabulary item as weak for the current stage even if the stage continues.
-- A failed Battle Mode phrase or stage-ending failure on an active vocabulary item marks that item as weak for the current stage because the learner did not hold the cue successfully in the higher-pressure context.
+- A Battle Mode stage-ending meter failure on an active vocabulary item marks that item as weak for the current stage and leaves the stage unresolved for this pass.
 - A clean first-pass clear in the active mode does not mark the item as weak.
 - Weak-word status belongs to the learner's current run outcome, not to permanent pack authoring metadata or a new vocabulary-item schema field.
 

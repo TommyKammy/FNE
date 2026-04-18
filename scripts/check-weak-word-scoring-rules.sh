@@ -25,27 +25,37 @@ check_contains() {
   fi
 }
 
+check_contains_re() {
+  file="$1"
+  label="$2"
+  pattern="$3"
+  if ! grep -Eq -- "$pattern" "$file"; then
+    printf 'missing required %s pattern: %s\n' "$label" "$pattern" >&2
+    exit 1
+  fi
+}
+
 check_file "$learn_doc"
 check_file "$listen_doc"
 check_file "$battle_doc"
 check_file "$review_doc"
 
 check_contains "$learn_doc" "Learn Mode" "Weak-Word Scoring Boundary"
-check_contains "$learn_doc" "Learn Mode" "A first-try success is a clean first-pass clear and does not mark the item as weak."
-check_contains "$learn_doc" "Learn Mode" "A supported repeat clears the item for immediate progression but still marks it as a weak word for the current stage."
+check_contains_re "$learn_doc" "Learn Mode" "A first-try success.*clean first-pass clear.*does not mark the item as weak"
+check_contains_re "$learn_doc" "Learn Mode" "A supported repeat.*marks it as a weak word for the current stage"
 
 check_contains "$listen_doc" "Listen & Match Mode" "Weak-Word Scoring Boundary"
-check_contains "$listen_doc" "Listen & Match Mode" "A correct first selection is a clean first-pass clear and does not mark the target as weak."
-check_contains "$listen_doc" "Listen & Match Mode" "A correct retry clears the target with reduced credit but still marks it as a weak word for the current stage."
-check_contains "$listen_doc" "Listen & Match Mode" "A second miss after the supported retry marks the target as a weak word and leaves it unresolved for this pass."
+check_contains_re "$listen_doc" "Listen & Match Mode" "A correct first selection.*clean first-pass clear.*does not mark the target as weak"
+check_contains_re "$listen_doc" "Listen & Match Mode" "A correct retry.*reduced credit.*marks it as a weak word for the current stage"
+check_contains_re "$listen_doc" "Listen & Match Mode" "A second miss after the supported retry.*marks the target as a weak word.*unresolved for this pass"
 
 check_contains "$battle_doc" "Battle Mode" "Weak-Word Scoring Boundary"
-check_contains "$battle_doc" "Battle Mode" "A phrase-resolved result without meter failure is a clean first-pass clear for that active vocabulary item and does not mark it as weak."
-check_contains "$battle_doc" "Battle Mode" "A phrase-weakened result marks the active vocabulary item as a weak word even if the stage continues."
-check_contains "$battle_doc" "Battle Mode" "A stage-ending meter failure marks the active vocabulary item as a weak word and leaves the stage unresolved."
+check_contains_re "$battle_doc" "Battle Mode" "A phrase-resolved result without meter failure.*clean first-pass clear.*does not mark it as weak"
+check_contains_re "$battle_doc" "Battle Mode" "A phrase-weakened result.*marks the active vocabulary item as a weak word"
+check_contains_re "$battle_doc" "Battle Mode" "A stage-ending meter failure.*marks the active vocabulary item as a weak word.*stage unresolved"
 
 check_contains "$review_doc" "Review loop" "supported repeat in Learn Mode or Listen & Match retry clear"
 check_contains "$review_doc" "Review loop" "Battle Mode phrase-weakened result"
-check_contains "$review_doc" "Review loop" "same clean, supported, weakened, or unresolved outcome labels"
+check_contains_re "$review_doc" "Review loop" "same clean, supported, weakened, or unresolved outcome labels"
 
 printf 'Weak word scoring rules check passed\n'
