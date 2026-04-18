@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Apple illustration</title>
+  <desc id="desc">A simple red apple with a green leaf for the demo vocabulary item.</desc>
+  <rect width="256" height="256" rx="40" fill="#fff6ec" />
+  <path d="M132 48c-12 0-22 8-28 18 13 0 27-6 34-18h-6Z" fill="#5d7f2d" />
+  <path d="M104 52c9 10 23 16 37 16-5-11-17-20-30-20h-7l0 4Z" fill="#7ba23f" />
+  <path
+    d="M126 78c-36 0-66 24-78 58-13 39 18 88 56 88 11 0 19-4 26-8 7 4 15 8 26 8 38 0 69-49 56-88-12-34-42-58-78-58h-8Z"
+    fill="#d94a3a"
+  />
+  <path
+    d="M102 116c-10 11-16 26-16 42 0 24 12 46 31 59-25-3-45-29-45-61 0-17 6-32 16-44 9-10 22-18 37-21-9 6-17 15-23 25Z"
+    fill="#f26c58"
+    opacity="0.7"
+  />
+  <path d="M148 60c0 16-9 27-24 31 4-19 14-30 31-35-4 2-7 3-7 4Z" fill="#6f4b26" />
+  <ellipse cx="164" cy="116" rx="14" ry="10" fill="#ffffff" opacity="0.25" />
+</svg>
