@@ -53,6 +53,13 @@ Each playtest notes record should capture:
 - direct learner quotes or short paraphrases about confusion, enjoyment, and motivation to replay
 - a final disposition of `pass`, `conditional pass`, or `fail`
 
+Apply privacy constraints to every playtest notes record:
+
+- do not record names, exact ages, birthdates, contact details, school names, classroom identifiers, or precise locations
+- keep learner context anonymized and minimal, using shorthand such as `AGE_BAND:12-14`, `PRIOR_FAMILIARITY:first-session`, or `SESSION_ID:playtest-03`
+- if a learner quote includes identifying details, paraphrase or redact them before storing the note
+- keep raw notes review-scoped with limited reviewer access, and avoid turning PoC observations into a permanent learner profile
+
 Route qualitative findings by boundary instead of mixing them into one generic bucket:
 
 - content comprehension problems go to content QA follow-up
@@ -69,8 +76,8 @@ Apply this rubric only after the build is actually playable in the PoC sense:
 
 Use the outcome in three states:
 
-- `pass`: hard gates pass and the build scores at least 4 of 5
-- `conditional pass`: hard gates pass, the build scores 4 of 5, and the remaining miss is minor enough to fix without redefining the PoC scope
+- `pass`: hard gates pass and the build scores 5 of 5
+- `conditional pass`: hard gates pass, the build scores 4 of 5, the missed check is not the end-to-end completion gate, and the remaining miss is minor enough to fix without redefining the PoC scope
 - `fail`: any hard gate fails, the build scores below 4 of 5, or the feedback path is too unclear to compare sessions reliably
 
 ## Review Notes
