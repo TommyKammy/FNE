@@ -132,18 +132,26 @@ export class BootScene extends Phaser.Scene {
     const normalizedKey = event.key.toLowerCase();
 
     if (normalizedKey === "enter") {
-      if (this.roundState.phase === "idle" || this.roundState.phase === "judged") {
+      if (
+        this.roundState.phase === "idle" ||
+        this.roundState.phase === "retry-needed" ||
+        this.roundState.phase === "passed"
+      ) {
         const idleState =
-          this.roundState.phase === "judged"
-            ? restartRevealRound(this.roundState)
-            : this.roundState;
+          this.roundState.phase === "idle" ? this.roundState : restartRevealRound(this.roundState);
 
-        const revealingState = beginRevealRound(idleState);
+        const attentionCueState = beginRevealRound(idleState);
 
-        this.roundState = revealingState;
+        this.roundState = attentionCueState;
+        this.renderRoundState();
+        this.roundState = advanceRevealRound(this.roundState);
+        this.renderRoundState();
+        this.roundState = advanceRevealRound(this.roundState);
         this.renderRoundState();
         this.playPronunciationCue();
-        this.roundState = advanceRevealRound(revealingState);
+        this.roundState = advanceRevealRound(this.roundState);
+        this.renderRoundState();
+        this.roundState = advanceRevealRound(this.roundState);
         this.renderRoundState();
       }
 
@@ -172,15 +180,35 @@ export class BootScene extends Phaser.Scene {
         this.feedbackTitleText.setColor(NEUTRAL_COLOR);
         this.outcomeWordText.setVisible(false);
         break;
-      case "revealing":
+      case "attention-cue":
         this.feedbackTitleText.setColor(NEUTRAL_COLOR);
         this.outcomeWordText.setVisible(false);
+        break;
+      case "image-reveal":
+        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
+        this.outcomeWordText.setVisible(false);
+        break;
+      case "pronunciation-reveal":
+        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
+        this.outcomeWordText.setVisible(false);
+        break;
+      case "text-reveal":
+        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
+        this.outcomeWordText.setVisible(true);
+        this.outcomeWordText.setText(`${this.roundState.termLabel} (${this.roundState.meaningLabel})`);
         break;
       case "awaiting-input":
         this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(false);
+        this.outcomeWordText.setText(`${this.roundState.termLabel} (${this.roundState.meaningLabel})`);
+        this.outcomeWordText.setVisible(true);
         break;
-      case "judged":
+      case "retry-needed":
+        this.feedbackTitleText.setColor(FAILURE_COLOR);
+        this.outcomeWordText
+          .setText(`${this.roundState.termLabel} (${this.roundState.meaningLabel})`)
+          .setVisible(true);
+        break;
+      case "passed":
         this.feedbackTitleText.setColor(
           this.roundState.judgment === "success" ? SUCCESS_COLOR : FAILURE_COLOR
         );
