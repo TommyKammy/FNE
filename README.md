@@ -12,6 +12,7 @@ The review and weak-word loop spec lives in [docs/review-loop.md](docs/review-lo
 The Battle Mode behavior spec lives in [docs/battle-mode.md](docs/battle-mode.md).
 The Listen & Match Mode behavior spec lives in [docs/listen-and-match-mode.md](docs/listen-and-match-mode.md).
 The parent observation planning spec lives in [docs/parent-observation.md](docs/parent-observation.md).
+The metric capture-point map for parent observation and gameplay outcomes lives in [docs/measurement-points.md](docs/measurement-points.md).
 The shared visual readability and input simplicity rules live in [docs/ux-rules.md](docs/ux-rules.md).
 The practical accessibility baseline lives in [docs/accessibility-baseline.md](docs/accessibility-baseline.md).
 The minimal launch-to-play contract lives in [docs/first-launch-flow.md](docs/first-launch-flow.md).
