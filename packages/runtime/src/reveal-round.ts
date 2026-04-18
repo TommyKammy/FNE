@@ -1,6 +1,7 @@
 import type { VocabularyItem } from "@fne/shared";
 
-export type RevealRoundPhase = "ready" | "awaiting-answer" | "success" | "failure";
+export type RevealRoundPhase = "idle" | "revealing" | "awaiting-input" | "judged";
+export type RevealRoundJudgment = "success" | "failure";
 
 export interface RevealRoundState {
   itemId: string;
@@ -8,6 +9,7 @@ export interface RevealRoundState {
   meaningLabel: string;
   expectedKey: string;
   phase: RevealRoundPhase;
+  judgment: RevealRoundJudgment | null;
   audioCueRequestCount: number;
   feedbackTitle: string;
   feedbackBody: string;
@@ -73,7 +75,8 @@ export function createRevealRoundState(item: VocabularyItem): RevealRoundSetupRe
       termLabel: item.term,
       meaningLabel: item.meaning,
       expectedKey,
-      phase: "ready",
+      phase: "idle",
+      judgment: null,
       audioCueRequestCount: 0,
       feedbackTitle: "Ready to listen?",
       feedbackBody: "Press Enter to hear the word, then type its first letter.",
@@ -82,17 +85,32 @@ export function createRevealRoundState(item: VocabularyItem): RevealRoundSetupRe
   };
 }
 
-export function startRevealRound(state: RevealRoundState): RevealRoundState {
-  if (state.phase === "awaiting-answer") {
+export function beginRevealRound(state: RevealRoundState): RevealRoundState {
+  if (state.phase !== "idle") {
     return state;
   }
 
   return {
     ...state,
-    phase: "awaiting-answer",
+    phase: "revealing",
+    judgment: null,
     audioCueRequestCount: state.audioCueRequestCount + 1,
+    feedbackTitle: "Listen to the word",
+    feedbackBody: "The pronunciation cue is playing now.",
+    lastInput: null
+  };
+}
+
+export function advanceRevealRound(state: RevealRoundState): RevealRoundState {
+  if (state.phase !== "revealing") {
+    return state;
+  }
+
+  return {
+    ...state,
+    phase: "awaiting-input",
     feedbackTitle: "Type the first letter",
-    feedbackBody: "Listen for the word, then type its first letter.",
+    feedbackBody: "Type the first letter of the word you just heard.",
     lastInput: null
   };
 }
@@ -101,7 +119,7 @@ export function judgeRevealRoundInput(
   state: RevealRoundState,
   key: string
 ): RevealRoundState {
-  if (state.phase !== "awaiting-answer") {
+  if (state.phase !== "awaiting-input") {
     return state;
   }
 
@@ -114,7 +132,8 @@ export function judgeRevealRoundInput(
   if (normalizedKey === state.expectedKey) {
     return {
       ...state,
-      phase: "success",
+      phase: "judged",
+      judgment: "success",
       feedbackTitle: "Nice hit",
       feedbackBody: `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. Press Enter to replay.`,
       lastInput: normalizedKey
@@ -123,7 +142,8 @@ export function judgeRevealRoundInput(
 
   return {
     ...state,
-    phase: "failure",
+    phase: "judged",
+    judgment: "failure",
     feedbackTitle: "Not yet",
     feedbackBody: `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}, not ${normalizedKey.toUpperCase()}. Press Enter to replay.`,
     lastInput: normalizedKey
@@ -131,9 +151,14 @@ export function judgeRevealRoundInput(
 }
 
 export function restartRevealRound(state: RevealRoundState): RevealRoundState {
+  if (state.phase !== "judged") {
+    return state;
+  }
+
   return {
     ...state,
-    phase: "ready",
+    phase: "idle",
+    judgment: null,
     feedbackTitle: "Ready to listen?",
     feedbackBody: "Press Enter to hear the word, then type its first letter.",
     lastInput: null

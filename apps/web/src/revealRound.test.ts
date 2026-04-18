@@ -1,58 +1,111 @@
 import {
+  advanceRevealRound,
+  beginRevealRound,
   createRevealRoundState,
   judgeRevealRoundInput,
   restartRevealRound,
-  startRevealRound
+  type RevealRoundState
 } from "@fne/runtime/reveal-round";
 import { describe, expect, it } from "vitest";
 
+function expectPlayableState(
+  setup: ReturnType<typeof createRevealRoundState>
+): RevealRoundState {
+  expect(setup.ok).toBe(true);
+
+  if (!setup.ok) {
+    throw new Error("expected a playable reveal round");
+  }
+
+  return setup.state;
+}
+
 describe("reveal round state", () => {
-  it("gates audio start, judges the typed first letter, and resets for replay", () => {
-    const setup = createRevealRoundState({
-      id: "apple",
-      term: "apple",
-      meaning: "りんご",
-      pronunciation: "AP-uhl",
-      imageAssetId: "img-apple",
-      audioAssetId: "aud-apple"
-    });
+  it("uses explicit idle, reveal, input, and judged states for the restartable loop", () => {
+    const state = expectPlayableState(
+      createRevealRoundState({
+        id: "apple",
+        term: "apple",
+        meaning: "りんご",
+        pronunciation: "AP-uhl",
+        imageAssetId: "img-apple",
+        audioAssetId: "aud-apple"
+      })
+    );
 
-    expect(setup.ok).toBe(true);
-
-    if (!setup.ok) {
-      throw new Error("expected a playable reveal round");
-    }
-
-    const state = setup.state;
-
-    expect(state.phase).toBe("ready");
+    expect(state.phase).toBe("idle");
+    expect(state.judgment).toBeNull();
     expect(state.expectedKey).toBe("a");
     expect(state.audioCueRequestCount).toBe(0);
-    expect(state.feedbackBody).toBe("Press Enter to hear the word, then type its first letter.");
 
-    const started = startRevealRound(state);
+    const revealing = beginRevealRound(state);
 
-    expect(started.phase).toBe("awaiting-answer");
-    expect(started.audioCueRequestCount).toBe(1);
-    expect(started.feedbackTitle).toBe("Type the first letter");
-    expect(started.feedbackBody).toBe("Listen for the word, then type its first letter.");
+    expect(revealing.phase).toBe("revealing");
+    expect(revealing.judgment).toBeNull();
+    expect(revealing.audioCueRequestCount).toBe(1);
+    expect(revealing.feedbackTitle).toBe("Listen to the word");
 
-    const failed = judgeRevealRoundInput(started, "x");
+    const awaitingInput = advanceRevealRound(revealing);
 
-    expect(failed.phase).toBe("failure");
+    expect(awaitingInput.phase).toBe("awaiting-input");
+    expect(awaitingInput.feedbackTitle).toBe("Type the first letter");
+    expect(awaitingInput.feedbackBody).toBe("Type the first letter of the word you just heard.");
+
+    const failed = judgeRevealRoundInput(awaitingInput, "x");
+
+    expect(failed.phase).toBe("judged");
+    expect(failed.judgment).toBe("failure");
     expect(failed.lastInput).toBe("x");
     expect(failed.feedbackBody).toContain("A");
     expect(failed.feedbackBody).toContain("X");
 
-    const replayReady = restartRevealRound(failed);
-    const replayStarted = startRevealRound(replayReady);
-    const succeeded = judgeRevealRoundInput(replayStarted, "A");
+    const restarted = restartRevealRound(failed);
 
-    expect(replayReady.phase).toBe("ready");
-    expect(replayStarted.audioCueRequestCount).toBe(2);
-    expect(succeeded.phase).toBe("success");
+    expect(restarted.phase).toBe("idle");
+    expect(restarted.judgment).toBeNull();
+    expect(restarted.audioCueRequestCount).toBe(1);
+
+    const replayRevealing = beginRevealRound(restarted);
+    const replayAwaitingInput = advanceRevealRound(replayRevealing);
+    const succeeded = judgeRevealRoundInput(replayAwaitingInput, "A");
+
+    expect(replayRevealing.audioCueRequestCount).toBe(2);
+    expect(succeeded.phase).toBe("judged");
+    expect(succeeded.judgment).toBe("success");
     expect(succeeded.feedbackBody).toContain("apple");
     expect(succeeded.feedbackBody).toContain("A");
+  });
+
+  it("fails closed on invalid transitions and keeps the current state unchanged", () => {
+    const idleState = expectPlayableState(
+      createRevealRoundState({
+        id: "apple",
+        term: "apple",
+        meaning: "りんご",
+        pronunciation: "AP-uhl",
+        imageAssetId: "img-apple",
+        audioAssetId: "aud-apple"
+      })
+    );
+
+    expect(advanceRevealRound(idleState)).toBe(idleState);
+    expect(judgeRevealRoundInput(idleState, "a")).toBe(idleState);
+    expect(restartRevealRound(idleState)).toBe(idleState);
+
+    const revealing = beginRevealRound(idleState);
+
+    expect(beginRevealRound(revealing)).toBe(revealing);
+    expect(judgeRevealRoundInput(revealing, "a")).toBe(revealing);
+    expect(restartRevealRound(revealing)).toBe(revealing);
+
+    const awaitingInput = advanceRevealRound(revealing);
+    const judged = judgeRevealRoundInput(awaitingInput, "a");
+
+    expect(advanceRevealRound(awaitingInput)).toBe(awaitingInput);
+    expect(beginRevealRound(awaitingInput)).toBe(awaitingInput);
+    expect(advanceRevealRound(judged)).toBe(judged);
+    expect(judgeRevealRoundInput(judged, "a")).toBe(judged);
+    expect(beginRevealRound(judged)).toBe(judged);
   });
 
   it("returns a recoverable content error when the term has no Latin letter", () => {
