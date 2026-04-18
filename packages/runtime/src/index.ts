@@ -1,7 +1,15 @@
 import Phaser from "phaser";
-import { SHELL_HEIGHT_PX, SHELL_WIDTH_PX, type RuntimeMount } from "@fne/shared";
+import { type RuntimeMount } from "@fne/shared";
 import { BootScene } from "./scenes/BootScene";
+import {
+  createRuntimeGameConfig,
+  mountRuntimeWithGameCtor,
+  type RuntimeGameConfig,
+  type RuntimeGameConstructor,
+  type RuntimePhaserApi
+} from "./runtime-mount";
 
+export { BootScene } from "./scenes/BootScene";
 export {
   createBootSceneModel,
   loadDemoRuntimeItem,
@@ -9,26 +17,20 @@ export {
   type DemoRuntimeItemLoader,
   type RuntimeDemoItem
 } from "./demo-content";
+export {
+  createRuntimeGameConfig,
+  mountRuntimeWithGameCtor,
+  type RuntimeGameConfig,
+  type RuntimeGameConstructor,
+  type RuntimeGameHandle,
+  type RuntimePhaserApi
+} from "./runtime-mount";
 
 export function mountRuntime(container: HTMLElement): RuntimeMount {
-  const game = new Phaser.Game({
-    type: Phaser.AUTO,
-    parent: container,
-    backgroundColor: "#111927",
-    width: SHELL_WIDTH_PX,
-    height: SHELL_HEIGHT_PX,
-    scene: [BootScene],
-    scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: SHELL_WIDTH_PX,
-      height: SHELL_HEIGHT_PX
-    }
-  });
+  const phaserApi: RuntimePhaserApi = Phaser;
+  const gameCtor =
+    Phaser.Game as unknown as RuntimeGameConstructor<RuntimeGameConfig<typeof BootScene>>;
+  const config = createRuntimeGameConfig(container, BootScene, phaserApi);
 
-  return {
-    destroy() {
-      game.destroy(true);
-    }
-  };
+  return mountRuntimeWithGameCtor(config, gameCtor);
 }

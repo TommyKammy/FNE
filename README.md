@@ -36,6 +36,13 @@ The draft TypeScript compiler baseline lives in [docs/typescript-baseline.md](do
 The TypeScript compatibility review checklist lives in [docs/typescript-review-checklist.md](docs/typescript-review-checklist.md).
 The lint and typecheck gate expectations live in [docs/validation-gates.md](docs/validation-gates.md).
 
+## Local Validation
+Install dependencies with `pnpm install`, then use the repo validation scripts directly:
+
+- `pnpm run smoke:runtime` verifies the runtime skeleton still boots the Phaser shell and tears down cleanly.
+- `pnpm run typecheck` runs the TypeScript gate.
+- `pnpm run lint` runs the lint gate.
+
 ## Product Brief
 FNE is a rhythm-based vocabulary learning game for junior-high students who struggle with text-only study. It borrows the energy and clear feedback loop of Friday Night Funkin' so practice feels like play instead of a worksheet.
 
