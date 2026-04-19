@@ -399,4 +399,61 @@ describe("battle stage baseline", () => {
     expect(restarted.noteStates[firstNote.id]).toBe("pending");
     expect(restarted.noteStates[fourthNote.id]).toBe("pending");
   });
+
+  it("keeps playing snapshots live while preserving the failed-stage freeze", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const [firstNote, secondNote, thirdNote, fourthNote] = battleStage.notes;
+
+    expect(firstNote).toBeDefined();
+    expect(secondNote).toBeDefined();
+    expect(thirdNote).toBeDefined();
+    expect(fourthNote).toBeDefined();
+
+    if (
+      firstNote === undefined ||
+      secondNote === undefined ||
+      thirdNote === undefined ||
+      fourthNote === undefined
+    ) {
+      throw new Error("expected the battle stage to schedule at least four notes");
+    }
+
+    const stalePlayingState = createBattleStageState(battleStage);
+    const playingElapsedTimeMs = firstNote.spawnTimeMs + firstNote.travelDurationMs / 2;
+    const playingSnapshot = getBattleStageSnapshot(
+      battleStage,
+      playingElapsedTimeMs,
+      stalePlayingState
+    );
+    const expectedPlayingSnapshot = getBattleStageSnapshot(battleStage, playingElapsedTimeMs);
+    const playingNote = playingSnapshot.notes.find((candidate) => candidate.id === firstNote.id);
+    const expectedPlayingNote = expectedPlayingSnapshot.notes.find(
+      (candidate) => candidate.id === firstNote.id
+    );
+
+    expect(playingNote?.y).toBeCloseTo(expectedPlayingNote?.y ?? -1, 5);
+    expect(playingNote?.progress).toBeCloseTo(expectedPlayingNote?.progress ?? -1, 5);
+    expect(playingNote?.isVisible).toBe(expectedPlayingNote?.isVisible ?? false);
+
+    const firstMiss = advanceBattleStageState(
+      createBattleStageState(battleStage),
+      firstNote.hitTimeMs + 181
+    );
+    const secondMiss = advanceBattleStageState(firstMiss, secondNote.hitTimeMs + 181);
+    const thirdMiss = advanceBattleStageState(secondMiss, thirdNote.hitTimeMs + 181);
+    const failedState = advanceBattleStageState(thirdMiss, fourthNote.hitTimeMs + 181);
+    const failedSnapshot = getBattleStageSnapshot(
+      battleStage,
+      battleStage.totalDurationMs + firstNote.hitTimeMs,
+      failedState
+    );
+    const expectedFailedSnapshot = getBattleStageSnapshot(
+      battleStage,
+      failedState.timelineTimeMs,
+      failedState
+    );
+
+    expect(failedState.stageStatus).toBe("failed");
+    expect(failedSnapshot).toEqual(expectedFailedSnapshot);
+  });
 });

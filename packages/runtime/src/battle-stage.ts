@@ -576,7 +576,10 @@ export function getBattleStageSnapshot(
   elapsedTimeMs: number,
   state?: BattleStageState
 ): BattleStageSnapshot {
-  const timelineTimeMs = state?.timelineTimeMs ?? getTimelineTimeMs(battleStage, elapsedTimeMs);
+  const timelineTimeMs =
+    state?.stageStatus === "failed"
+      ? state.timelineTimeMs
+      : getTimelineTimeMs(battleStage, elapsedTimeMs);
   const activePhrase =
     battleStage.phrases.find(
       (phrase) =>
