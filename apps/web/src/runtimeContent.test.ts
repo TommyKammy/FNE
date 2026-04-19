@@ -6,10 +6,36 @@ import {
 import {
   createBootSceneModel,
   loadDemoRuntimeItem,
+  loadDemoRuntimeStage,
   loadRuntimeItemFromManifest,
   loadRuntimeStageFromManifest
 } from "@fne/runtime/demo-content";
+import {
+  advanceLearnStageRound,
+  beginLearnStageRound,
+  continueLearnStage,
+  createLearnStageState,
+  judgeLearnStageInput
+} from "@fne/runtime/learn-stage";
 import { describe, expect, it, vi } from "vitest";
+
+function moveToAwaitingInput(state: ReturnType<typeof createLearnStageState>) {
+  const attentionCue = beginLearnStageRound(state);
+  const imageReveal = advanceLearnStageRound(attentionCue);
+  const pronunciationReveal = advanceLearnStageRound(imageReveal);
+  const textReveal = advanceLearnStageRound(pronunciationReveal);
+  const awaitingInput = advanceLearnStageRound(textReveal);
+
+  expect(awaitingInput.kind).toBe("in-progress");
+
+  if (awaitingInput.kind !== "in-progress") {
+    throw new Error("expected an in-progress learn stage");
+  }
+
+  expect(awaitingInput.roundState.phase).toBe("awaiting-input");
+
+  return awaitingInput;
+}
 
 describe("demo runtime content", () => {
   it("builds the boot scene model from a loader seam", () => {
@@ -53,6 +79,37 @@ describe("demo runtime content", () => {
     expect(demoItem.stageId).toBe("stage-fruit-1");
     expect(demoItem.imageSrc).toBe("/content/packs/demo-pack/assets/images/img-apple.svg");
     expect(demoItem.audioSrc).toBe("/content/packs/demo-pack/assets/audio/aud-apple.wav");
+  });
+
+  it("ships a real multi-item demo stage that can reach the summary state", () => {
+    const demoStage = loadDemoRuntimeStage();
+
+    expect(demoStage.items).toHaveLength(3);
+    expect(demoStage.items.map((item) => item.item.id)).toEqual(["apple", "melon", "banana"]);
+
+    let state = createLearnStageState(demoStage);
+
+    for (const expectedKey of ["a", "m", "b"]) {
+      const awaitingInput = moveToAwaitingInput(state);
+      const passed = judgeLearnStageInput(awaitingInput, expectedKey);
+
+      expect(passed.kind).toBe("in-progress");
+
+      if (passed.kind !== "in-progress") {
+        throw new Error("expected an in-progress learn stage");
+      }
+
+      expect(passed.roundState.phase).toBe("passed");
+      state = continueLearnStage(passed);
+    }
+
+    expect(state.kind).toBe("summary");
+
+    if (state.kind !== "summary") {
+      throw new Error("expected a summary learn stage");
+    }
+
+    expect(state.totalItemCount).toBe(3);
   });
 
   it("resolves the runtime item from the selected stage reference instead of global item order", () => {

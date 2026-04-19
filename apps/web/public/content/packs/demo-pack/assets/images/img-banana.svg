@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Banana illustration</title>
+  <desc id="desc">A simple yellow banana for the demo vocabulary item.</desc>
+  <rect width="256" height="256" rx="40" fill="#fff8e8" />
+  <path
+    d="M68 156c13 34 54 55 95 47 24-4 44-17 56-35-17 11-37 18-58 20-41 4-77-13-93-44Z"
+    fill="#c48b2f"
+    opacity="0.28"
+  />
+  <path
+    d="M81 76c10 49 47 88 94 103 19 6 38 7 55 4-14 9-33 14-54 12-55-5-101-48-111-104l16-15Z"
+    fill="#f3d34a"
+  />
+  <path
+    d="M96 79c7 42 39 75 81 89 13 4 25 5 37 4-10 6-24 9-39 8-47-4-87-39-96-84l17-17Z"
+    fill="#ffe26d"
+  />
+  <path d="M73 61c8 6 14 16 17 28l12-10c-4-12-12-22-21-29l-8 11Z" fill="#7a5430" />
+  <path d="M188 169c4 8 5 17 2 26 9-4 17-10 24-17-7 0-17-3-26-9Z" fill="#8d652c" />
+  <path
+    d="M114 101c9 19 26 36 48 47 12 7 26 10 38 10-14 4-31 2-47-6-24-11-42-30-51-51l12 0Z"
+    fill="#fff3a0"
+    opacity="0.85"
+  />
+</svg>

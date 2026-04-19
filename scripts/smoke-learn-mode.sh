@@ -9,4 +9,4 @@ printf 'Running Learn Mode doc contract check...\n'
 
 printf 'Running Learn Mode runtime contract tests...\n'
 cd "$repo_root"
-pnpm --filter @fne/web test -- src/revealRound.test.ts src/learnStage.test.ts
+pnpm --filter @fne/web test -- src/revealRound.test.ts src/learnStage.test.ts src/runtimeContent.test.ts
