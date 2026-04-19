@@ -31,6 +31,7 @@ export interface LearnStageSummaryState {
   kind: "summary";
   packId: string;
   stageId: string;
+  items: RuntimeDemoItem[];
   completedItems: LearnStageItemResult[];
   totalItemCount: number;
 }
@@ -67,6 +68,7 @@ function createProgressState(
       kind: "summary",
       packId: stage.packId,
       stageId: stage.stageId,
+      items: stage.items,
       completedItems,
       totalItemCount: stage.items.length
     };
@@ -170,5 +172,21 @@ export function continueLearnStage(state: LearnStageState): LearnStageState {
     },
     nextIndex,
     completedItems
+  );
+}
+
+export function restartLearnStage(state: LearnStageState): LearnStageState {
+  if (state.kind !== "summary") {
+    return state;
+  }
+
+  return createProgressState(
+    {
+      packId: state.packId,
+      stageId: state.stageId,
+      items: state.items
+    },
+    0,
+    []
   );
 }
