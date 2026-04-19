@@ -161,4 +161,62 @@ describe("battle stage baseline", () => {
       consumedNote: true
     });
   });
+
+  it("resets note state when elapsed time skips across a full chart loop", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const note = battleStage.notes[0];
+
+    expect(note).toBeDefined();
+
+    if (note === undefined) {
+      throw new Error("expected the battle stage to schedule at least one note");
+    }
+
+    const lane = battleStage.lanes[note.laneIndex];
+    const initialState = createBattleStageState(battleStage);
+    const hitState = judgeBattleStageInput(
+      initialState,
+      note.hitTimeMs + 36,
+      lane.key
+    );
+    const loopedState = advanceBattleStageState(
+      hitState,
+      battleStage.totalDurationMs + note.hitTimeMs + 60
+    );
+
+    expect(loopedState.loopCount).toBe(1);
+    expect(loopedState.noteStates[note.id]).toBe("pending");
+    expect(loopedState.lastJudgment).toBeNull();
+  });
+
+  it("judges a late keypress against the missed note instead of the next pending note", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const firstNote = battleStage.notes[0];
+    const nextNote = battleStage.notes[1];
+
+    expect(firstNote).toBeDefined();
+    expect(nextNote).toBeDefined();
+
+    if (firstNote === undefined || nextNote === undefined) {
+      throw new Error("expected the battle stage to schedule at least two notes");
+    }
+
+    const lane = battleStage.lanes[firstNote.laneIndex];
+    const initialState = createBattleStageState(battleStage);
+    const lateState = judgeBattleStageInput(
+      initialState,
+      firstNote.hitTimeMs + 181,
+      lane.key
+    );
+
+    expect(lateState.noteStates[firstNote.id]).toBe("missed");
+    expect(lateState.noteStates[nextNote.id]).toBe("pending");
+    expect(lateState.lastJudgment).toMatchObject({
+      noteId: firstNote.id,
+      laneIndex: firstNote.laneIndex,
+      inputKey: lane.key,
+      outcome: "missed-window",
+      consumedNote: true
+    });
+  });
 });

@@ -154,20 +154,34 @@ function createInitialNoteStates(battleStage: BattleStageDefinition): Record<str
   );
 }
 
+function getNextLoopCount(battleStage: BattleStageDefinition, elapsedTimeMs: number): number {
+  return battleStage.totalDurationMs > 0
+    ? Math.max(0, Math.floor(elapsedTimeMs / battleStage.totalDurationMs))
+    : 0;
+}
+
+function getFirstPendingNote(
+  battleStage: BattleStageDefinition,
+  noteStates: Record<string, BattleNoteState>
+): BattleNoteDefinition | undefined {
+  return battleStage.notes.find((note) => noteStates[note.id] === "pending");
+}
+
 function syncBattleLoop(
   state: BattleStageState,
   battleStage: BattleStageDefinition,
   elapsedTimeMs: number
 ): BattleStageState {
   const timelineTimeMs = getTimelineTimeMs(battleStage, elapsedTimeMs);
+  const nextLoopCount = getNextLoopCount(battleStage, elapsedTimeMs);
 
-  if (timelineTimeMs < state.timelineTimeMs) {
+  if (nextLoopCount !== state.loopCount) {
     return {
       battleStage,
       noteStates: createInitialNoteStates(battleStage),
       lastJudgment: null,
       timelineTimeMs,
-      loopCount: state.loopCount + 1
+      loopCount: nextLoopCount
     };
   }
 
@@ -236,8 +250,9 @@ export function judgeBattleStageInput(
   key: string
 ): BattleStageState {
   const { battleStage } = state;
-  const advancedState = advanceBattleStageState(state, elapsedTimeMs);
-  const targetNote = battleStage.notes.find((note) => advancedState.noteStates[note.id] === "pending");
+  const loopSyncedState = syncBattleLoop(state, battleStage, elapsedTimeMs);
+  const targetNote = getFirstPendingNote(battleStage, loopSyncedState.noteStates);
+  const advancedState = advanceBattleStageState(loopSyncedState, elapsedTimeMs);
 
   if (targetNote === undefined) {
     return advancedState;
@@ -249,7 +264,24 @@ export function judgeBattleStageInput(
     return advancedState;
   }
 
-  const offsetMs = advancedState.timelineTimeMs - targetNote.hitTimeMs;
+  const offsetMs = loopSyncedState.timelineTimeMs - targetNote.hitTimeMs;
+
+  if (offsetMs > HIT_WINDOW_MS) {
+    return {
+      ...advancedState,
+      lastJudgment: {
+        noteId: targetNote.id,
+        itemId: targetNote.itemId,
+        laneIndex: targetNote.laneIndex,
+        inputKey: key,
+        inputLaneIndex,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
+        offsetMs,
+        outcome: "missed-window",
+        consumedNote: true
+      }
+    };
+  }
 
   if (offsetMs < -HIT_WINDOW_MS) {
     return {
@@ -260,7 +292,7 @@ export function judgeBattleStageInput(
         laneIndex: targetNote.laneIndex,
         inputKey: key,
         inputLaneIndex,
-        judgedAtMs: advancedState.timelineTimeMs,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
         offsetMs,
         outcome: "too-early",
         consumedNote: false
@@ -277,7 +309,7 @@ export function judgeBattleStageInput(
         laneIndex: targetNote.laneIndex,
         inputKey: key,
         inputLaneIndex,
-        judgedAtMs: advancedState.timelineTimeMs,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
         offsetMs,
         outcome: "wrong-lane",
         consumedNote: false
@@ -297,7 +329,7 @@ export function judgeBattleStageInput(
       laneIndex: targetNote.laneIndex,
       inputKey: key,
       inputLaneIndex,
-      judgedAtMs: advancedState.timelineTimeMs,
+      judgedAtMs: loopSyncedState.timelineTimeMs,
       offsetMs,
       outcome: "hit",
       consumedNote: true
