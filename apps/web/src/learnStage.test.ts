@@ -249,6 +249,16 @@ describe("learn stage state", () => {
     expect(restarted.roundState.audioCueRequestCount).toBe(1);
   });
 
+  it("does not advance an in-progress stage when replay is called outside the summary", () => {
+    const state = expectInProgressState(createLearnStageState(createFixtureStage()));
+    const replayed = restartLearnStageAndBeginRound(state);
+    const replayedInProgress = expectInProgressState(replayed);
+
+    expect(replayed).toBe(state);
+    expect(replayedInProgress.roundState.phase).toBe("idle");
+    expect(replayedInProgress.currentIndex).toBe(0);
+  });
+
   it("keeps the same item active after a missed timing window and records the supported clear", () => {
     const stage = expectInProgressState(createLearnStageState(createFixtureStage()));
     const awaitingInput = moveToAwaitingInput(stage);

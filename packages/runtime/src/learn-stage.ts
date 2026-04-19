@@ -192,6 +192,10 @@ export function restartLearnStage(state: LearnStageState): LearnStageState {
 }
 
 export function restartLearnStageAndBeginRound(state: LearnStageState): LearnStageState {
+  if (state.kind !== "summary") {
+    return state;
+  }
+
   const restartedState = restartLearnStage(state);
 
   if (restartedState.kind !== "in-progress") {
