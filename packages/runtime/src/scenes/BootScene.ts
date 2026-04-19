@@ -1,333 +1,267 @@
 import Phaser from "phaser";
-import { createBootSceneModel } from "../demo-content";
 import {
-  advanceLearnStageRound,
-  beginLearnStageRound,
-  continueLearnStage,
-  createLearnStageState,
-  judgeLearnStageInput,
-  judgeLearnStageTimeout,
-  restartLearnStageAndBeginRound,
-  restartLearnStageRound,
-  type LearnStageState
-} from "../learn-stage";
+  createBattleStageDefinition,
+  getBattleStageSnapshot,
+  type BattleStageDefinition
+} from "../battle-stage";
+import { loadDemoRuntimeStage, type RuntimeDemoItem, type RuntimeStage } from "../demo-content";
 
-const PANEL_FILL = 0x1d2638;
-const CARD_FILL = 0x24324a;
-const SUCCESS_COLOR = "#7ef0ad";
-const FAILURE_COLOR = "#ff8b7c";
-const NEUTRAL_COLOR = "#ffcf88";
-const LEARN_RESPONSE_WINDOW_MS = 1800;
+const PANEL_FILL = 0x172132;
+const CARD_FILL = 0x22314a;
+const LANE_FILLS = [0x233354, 0x26415d, 0x274766, 0x2c3c59];
+const NOTE_FILLS = [0xff8b7c, 0xffcf88, 0x7ef0ad, 0x83d7ff];
+const RECEPTOR_IDLE_FILL = 0xe6edf5;
+const RECEPTOR_ACTIVE_FILL = 0xffcf88;
+const INPUT_PULSE_MS = 140;
 
 export class BootScene extends Phaser.Scene {
-  private stageState!: LearnStageState;
-  private responseTimeoutEvent: Phaser.Time.TimerEvent | null = null;
-  private imageFrame!: Phaser.GameObjects.Image;
-  private subheadText!: Phaser.GameObjects.Text;
-  private feedbackTitleText!: Phaser.GameObjects.Text;
-  private feedbackBodyText!: Phaser.GameObjects.Text;
-  private cueLabelText!: Phaser.GameObjects.Text;
-  private answerHintText!: Phaser.GameObjects.Text;
-  private outcomeWordText!: Phaser.GameObjects.Text;
+  private runtimeStage!: RuntimeStage;
+  private battleStage!: BattleStageDefinition;
+  private sceneStartTimeMs = 0;
+  private cueImageFrame!: Phaser.GameObjects.Image;
+  private cueWordText!: Phaser.GameObjects.Text;
+  private cueMeaningText!: Phaser.GameObjects.Text;
+  private cuePronunciationText!: Phaser.GameObjects.Text;
+  private inputLegendText!: Phaser.GameObjects.Text;
+  private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
+  private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
+  private activeItemId: string | null = null;
+  private lanePulseUntilMs: number[] = [0, 0, 0, 0];
+  private itemsById = new Map<string, RuntimeDemoItem>();
 
   constructor() {
     super("boot");
   }
 
   preload() {
-    const model = createBootSceneModel();
+    const runtimeStage = loadDemoRuntimeStage();
 
-    model.items.forEach((item, index) => {
+    runtimeStage.items.forEach((item, index) => {
       this.load.image(this.getImageKey(index), item.imageSrc);
       this.load.audio(this.getAudioKey(index), [item.audioSrc]);
     });
   }
 
   create() {
-    const { width, height } = this.scale;
-    const model = createBootSceneModel();
-
-    this.stageState = createLearnStageState({
-      packId: model.packId,
-      stageId: model.stageId,
-      items: model.items
-    });
+    this.runtimeStage = loadDemoRuntimeStage();
+    this.battleStage = createBattleStageDefinition(this.runtimeStage);
+    this.itemsById = new Map(
+      this.runtimeStage.items.map((item) => [item.item.id, item] satisfies [string, RuntimeDemoItem])
+    );
+    this.sceneStartTimeMs = this.time.now;
 
     this.cameras.main.setBackgroundColor("#111927");
+    this.renderCuePanel();
+    this.renderLanePlayfield();
+    this.input.keyboard?.on("keydown", this.handleKeyDown, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off("keydown", this.handleKeyDown, this);
+    });
 
-    this.add.rectangle(width / 2, height / 2, width - 48, height - 48, PANEL_FILL, 1);
+    this.refreshFrame(0);
+  }
+
+  override update() {
+    const elapsedTimeMs = this.time.now - this.sceneStartTimeMs;
+
+    this.refreshFrame(elapsedTimeMs);
+  }
+
+  private renderCuePanel() {
+    const { cueArea } = this.battleStage;
+    const centerX = cueArea.left + cueArea.width / 2;
+
     this.add
-      .text(width / 2, 58, model.headline, {
+      .rectangle(centerX, cueArea.top + cueArea.height / 2, cueArea.width, cueArea.height, PANEL_FILL, 1)
+      .setStrokeStyle(2, 0xffcf88, 0.2);
+    this.add
+      .text(centerX, cueArea.top + 34, "Battle Mode baseline", {
         color: "#f6efe5",
-        fontFamily: "Trebuchet MS, Verdana, sans-serif",
-        fontSize: "28px",
-        fontStyle: "bold"
-      })
-      .setOrigin(0.5);
-
-    this.subheadText = this.add
-      .text(width / 2, 96, model.subhead, {
-        color: "#ffcf88",
-        fontFamily: "Trebuchet MS, Verdana, sans-serif",
-        fontSize: "16px"
-      })
-      .setOrigin(0.5);
-
-    this.add.rectangle(width / 2, 260, 280, 280, CARD_FILL, 1).setStrokeStyle(2, 0xffcf88, 0.18);
-    this.imageFrame = this.add.image(width / 2, 260, this.getImageKey(0)).setDisplaySize(220, 220);
-
-    this.cueLabelText = this.add
-      .text(width / 2, 420, "", {
-        color: "#f6efe5",
-        fontFamily: "Trebuchet MS, Verdana, sans-serif",
-        fontSize: "26px",
-        fontStyle: "bold"
-      })
-      .setOrigin(0.5);
-
-    this.answerHintText = this.add
-      .text(width / 2, 454, "Listen for the English word, then type its first letter.", {
-        color: "#d6dee8",
-        fontFamily: "Trebuchet MS, Verdana, sans-serif",
-        fontSize: "18px"
-      })
-      .setOrigin(0.5);
-
-    this.feedbackTitleText = this.add
-      .text(width / 2, 492, "", {
-        color: NEUTRAL_COLOR,
         fontFamily: "Trebuchet MS, Verdana, sans-serif",
         fontSize: "24px",
         fontStyle: "bold"
       })
       .setOrigin(0.5);
-
-    this.feedbackBodyText = this.add
-      .text(width / 2, 520, "", {
-        color: "#f6efe5",
+    this.add
+      .text(centerX, cueArea.top + 68, "Image cue stays separate from timing lanes.", {
+        color: "#d6dee8",
         fontFamily: "Trebuchet MS, Verdana, sans-serif",
-        fontSize: "16px",
+        fontSize: "15px",
         align: "center",
-        wordWrap: { width: width - 120 }
+        wordWrap: { width: cueArea.width - 32 }
       })
       .setOrigin(0.5);
+    this.add
+      .rectangle(centerX, cueArea.top + 176, cueArea.width - 44, 196, CARD_FILL, 1)
+      .setStrokeStyle(2, 0xffcf88, 0.14);
 
-    this.outcomeWordText = this.add
-      .text(width / 2, 382, "", {
+    this.cueImageFrame = this.add.image(centerX, cueArea.top + 176, this.getImageKey(0)).setDisplaySize(168, 168);
+    this.cueMeaningText = this.add
+      .text(centerX, cueArea.top + 304, "", {
+        color: "#ffcf88",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "26px",
+        fontStyle: "bold"
+      })
+      .setOrigin(0.5);
+    this.cueWordText = this.add
+      .text(centerX, cueArea.top + 340, "", {
         color: "#f6efe5",
         fontFamily: "Trebuchet MS, Verdana, sans-serif",
         fontSize: "22px",
         fontStyle: "bold"
       })
-      .setOrigin(0.5)
-      .setVisible(false);
+      .setOrigin(0.5);
+    this.cuePronunciationText = this.add
+      .text(centerX, cueArea.top + 372, "", {
+        color: "#d6dee8",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "16px"
+      })
+      .setOrigin(0.5);
+    this.inputLegendText = this.add
+      .text(centerX, cueArea.bottom - 52, "Keys: Left / Down / Up / Right", {
+        color: "#f6efe5",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "16px",
+        align: "center",
+        wordWrap: { width: cueArea.width - 32 }
+      })
+      .setOrigin(0.5);
+  }
 
-    this.input.keyboard?.on("keydown", this.handleKeyDown, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.clearResponseTimeout();
-      this.input.keyboard?.off("keydown", this.handleKeyDown, this);
+  private renderLanePlayfield() {
+    const { playfield, lanes, notes } = this.battleStage;
+
+    this.add
+      .rectangle(
+        playfield.left + playfield.width / 2,
+        playfield.top + playfield.height / 2,
+        playfield.width,
+        playfield.height,
+        PANEL_FILL,
+        1
+      )
+      .setStrokeStyle(2, 0xffcf88, 0.18);
+    this.add
+      .text(playfield.left + 20, playfield.top + 22, "Learner lanes", {
+        color: "#f6efe5",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "20px",
+        fontStyle: "bold"
+      });
+    this.add
+      .text(playfield.left + 20, playfield.top + 48, "Fixed columns, fixed receptors, looping beginner-safe note travel.", {
+        color: "#d6dee8",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "14px"
+      });
+
+    lanes.forEach((lane) => {
+      this.add
+        .rectangle(
+          lane.centerX,
+          playfield.top + playfield.height / 2 + 20,
+          lane.width,
+          playfield.height - 92,
+          LANE_FILLS[lane.index],
+          0.72
+        )
+        .setStrokeStyle(2, 0xffffff, 0.08);
+      this.add
+        .text(lane.centerX, playfield.top + 92, lane.direction.toUpperCase(), {
+          color: "#f6efe5",
+          fontFamily: "Trebuchet MS, Verdana, sans-serif",
+          fontSize: "18px",
+          fontStyle: "bold"
+        })
+        .setOrigin(0.5);
+      this.add
+        .text(lane.centerX, lane.receptorY + 28, lane.key.replace("Arrow", ""), {
+          color: "#d6dee8",
+          fontFamily: "Trebuchet MS, Verdana, sans-serif",
+          fontSize: "14px"
+        })
+        .setOrigin(0.5);
+
+      const receptor = this.add
+        .rectangle(lane.centerX, lane.receptorY, lane.width - 18, 16, RECEPTOR_IDLE_FILL, 1)
+        .setStrokeStyle(2, 0xffffff, 0.22);
+
+      this.receptorSprites.push(receptor);
     });
 
-    this.renderStageState();
+    notes.forEach((note) => {
+      const lane = lanes[note.laneIndex];
+      const sprite = this.add
+        .rectangle(lane.centerX, playfield.top + 24, lane.width - 32, 18, NOTE_FILLS[note.laneIndex], 1)
+        .setStrokeStyle(2, 0xffffff, 0.16)
+        .setVisible(false);
+
+      this.noteSprites.set(note.id, sprite);
+    });
+  }
+
+  private refreshFrame(elapsedTimeMs: number) {
+    const snapshot = getBattleStageSnapshot(this.battleStage, elapsedTimeMs);
+
+    snapshot.notes.forEach((note) => {
+      const sprite = this.noteSprites.get(note.id);
+
+      if (sprite === undefined) {
+        return;
+      }
+
+      sprite.setPosition(note.x, note.y).setVisible(note.isVisible);
+      sprite.setAlpha(note.isVisible ? 0.96 : 0);
+    });
+
+    this.receptorSprites.forEach((receptor, laneIndex) => {
+      const isActive = this.time.now <= this.lanePulseUntilMs[laneIndex];
+
+      receptor.setFillStyle(isActive ? RECEPTOR_ACTIVE_FILL : RECEPTOR_IDLE_FILL, 1);
+      receptor.setScale(1, isActive ? 1.18 : 1);
+    });
+
+    if (snapshot.activeItemId !== this.activeItemId) {
+      this.activeItemId = snapshot.activeItemId;
+      this.renderActiveCue(snapshot.activeItemId);
+    }
+  }
+
+  private renderActiveCue(activeItemId: string | null) {
+    const runtimeItem = activeItemId === null ? undefined : this.itemsById.get(activeItemId);
+
+    if (runtimeItem === undefined) {
+      return;
+    }
+
+    const itemIndex = this.runtimeStage.items.findIndex((candidate) => candidate.item.id === activeItemId);
+
+    this.cueImageFrame.setTexture(this.getImageKey(itemIndex));
+    this.cueMeaningText.setText(runtimeItem.item.meaning);
+    this.cueWordText.setText(runtimeItem.item.term.toUpperCase());
+    this.cuePronunciationText.setText(runtimeItem.item.pronunciation);
+    this.inputLegendText.setText(`Keys: Left / Down / Up / Right\nActive cue: ${runtimeItem.item.term}`);
+    this.sound.stopAll();
+    this.sound.play(this.getAudioKey(itemIndex));
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
-    const normalizedKey = event.key.toLowerCase();
+    const laneIndex = this.battleStage.lanes.findIndex((lane) => lane.key === event.key);
 
-    if (normalizedKey === "enter") {
-      if (this.stageState.kind === "summary") {
-        this.clearResponseTimeout();
-        this.stageState = restartLearnStageAndBeginRound(this.stageState);
-        this.renderStageState();
-        this.renderRoundState();
-        this.playPronunciationCue();
-        this.syncResponseTimeout();
-        return;
-      }
-
-      if (this.stageState.kind !== "in-progress") {
-        return;
-      }
-
-      if (this.stageState.roundState.phase === "passed") {
-        this.clearResponseTimeout();
-        this.stageState = continueLearnStage(this.stageState);
-        this.renderStageState();
-        return;
-      }
-
-      const readyState =
-        this.stageState.roundState.phase === "idle"
-          ? this.stageState
-          : this.stageState.roundState.phase === "retry-needed"
-            ? restartLearnStageRound(this.stageState)
-            : this.stageState;
-
-      this.stageState = beginLearnStageRound(readyState);
-      this.renderRoundState();
-      this.stageState = advanceLearnStageRound(this.stageState);
-      this.renderRoundState();
-      this.stageState = advanceLearnStageRound(this.stageState);
-      this.renderRoundState();
-      this.playPronunciationCue();
-      this.stageState = advanceLearnStageRound(this.stageState);
-      this.renderRoundState();
-      this.stageState = advanceLearnStageRound(this.stageState);
-      this.renderRoundState();
-      this.syncResponseTimeout();
+    if (laneIndex === -1) {
       return;
     }
 
-    const nextState = judgeLearnStageInput(this.stageState, event.key);
-
-    if (nextState !== this.stageState) {
-      this.clearResponseTimeout();
-      this.stageState = nextState;
-      this.renderRoundState();
-    }
+    this.lanePulseUntilMs[laneIndex] = this.time.now + INPUT_PULSE_MS;
   };
 
-  private syncResponseTimeout() {
-    this.clearResponseTimeout();
-
-    if (
-      this.stageState.kind !== "in-progress" ||
-      this.stageState.roundState.phase !== "awaiting-input"
-    ) {
-      return;
-    }
-
-    this.responseTimeoutEvent = this.time.delayedCall(LEARN_RESPONSE_WINDOW_MS, () => {
-      const nextState = judgeLearnStageTimeout(this.stageState);
-
-      if (nextState === this.stageState) {
-        return;
-      }
-
-      this.stageState = nextState;
-      this.responseTimeoutEvent = null;
-      this.renderRoundState();
-    });
+  private getImageKey(index: number) {
+    return `runtime-item-image-${index}`;
   }
 
-  private clearResponseTimeout() {
-    this.responseTimeoutEvent?.remove(false);
-    this.responseTimeoutEvent = null;
-  }
-
-  private playPronunciationCue() {
-    if (this.stageState.kind !== "in-progress") {
-      return;
-    }
-
-    this.sound.stopAll();
-    this.sound.play(this.getAudioKey(this.stageState.currentIndex));
-  }
-
-  private renderStageState() {
-    if (this.stageState.kind === "content-error") {
-      this.imageFrame.setVisible(false);
-      this.cueLabelText.setText("Visible cue unavailable");
-      this.answerHintText.setText("This item needs a Latin-letter term before keyboard play can start.");
-      this.feedbackTitleText.setText("Content error");
-      this.feedbackTitleText.setColor(FAILURE_COLOR);
-      this.feedbackBodyText.setText(this.stageState.error.message);
-      this.outcomeWordText.setVisible(false);
-      return;
-    }
-
-    if (this.stageState.kind === "summary") {
-      const supportedCount = this.stageState.completedItems.filter(
-        (item) => item.passedWithSupport
-      ).length;
-      const cleanClearCount = this.stageState.completedItems.length - supportedCount;
-
-      this.imageFrame.setVisible(false);
-      this.subheadText.setText(
-        `Pack ${this.stageState.packId} / Stage ${this.stageState.stageId} / Summary`
-      );
-      this.cueLabelText.setText("Stage complete");
-      this.answerHintText.setText("Press Enter to play this stage again.");
-      this.feedbackTitleText.setText("Stage summary");
-      this.feedbackTitleText.setColor(SUCCESS_COLOR);
-      this.feedbackBodyText.setText(
-        supportedCount === 0
-          ? `All ${this.stageState.totalItemCount} items cleared on the first try.`
-          : `First-try clears: ${cleanClearCount}. Needed another try: ${supportedCount}.`
-      );
-      this.outcomeWordText.setVisible(false);
-      return;
-    }
-
-    this.imageFrame
-      .setTexture(this.getImageKey(this.stageState.currentIndex))
-      .setVisible(true);
-    this.subheadText.setText(
-      `Pack ${this.stageState.packId} / Stage ${this.stageState.stageId} / Item ${this.stageState.currentIndex + 1} of ${this.stageState.items.length}`
-    );
-    this.cueLabelText.setText(`Visible cue: ${this.stageState.currentItem.item.meaning}`);
-    this.answerHintText.setText("Listen for the English word, then type its first letter.");
-    this.renderRoundState();
-  }
-
-  private renderRoundState() {
-    if (this.stageState.kind !== "in-progress") {
-      return;
-    }
-
-    const { roundState } = this.stageState;
-    this.feedbackTitleText.setText(roundState.feedbackTitle);
-    this.feedbackBodyText.setText(roundState.feedbackBody);
-
-    switch (roundState.phase) {
-      case "idle":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(false);
-        break;
-      case "attention-cue":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(false);
-        break;
-      case "image-reveal":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(false);
-        break;
-      case "pronunciation-reveal":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(false);
-        break;
-      case "text-reveal":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setVisible(true);
-        this.outcomeWordText.setText(`${roundState.termLabel} (${roundState.meaningLabel})`);
-        break;
-      case "awaiting-input":
-        this.feedbackTitleText.setColor(NEUTRAL_COLOR);
-        this.outcomeWordText.setText(`${roundState.termLabel} (${roundState.meaningLabel})`);
-        this.outcomeWordText.setVisible(true);
-        break;
-      case "retry-needed":
-        this.feedbackTitleText.setColor(FAILURE_COLOR);
-        this.outcomeWordText
-          .setText(`${roundState.termLabel} (${roundState.meaningLabel})`)
-          .setVisible(true);
-        break;
-      case "passed":
-        this.feedbackTitleText.setColor(
-          roundState.judgment === "success" ? SUCCESS_COLOR : FAILURE_COLOR
-        );
-        this.outcomeWordText
-          .setText(`${roundState.termLabel} (${roundState.meaningLabel})`)
-          .setVisible(true);
-        break;
-    }
-  }
-
-  private getImageKey(index: number): string {
-    return `demo-item-image-${index}`;
-  }
-
-  private getAudioKey(index: number): string {
-    return `demo-item-audio-${index}`;
+  private getAudioKey(index: number) {
+    return `runtime-item-audio-${index}`;
   }
 }
