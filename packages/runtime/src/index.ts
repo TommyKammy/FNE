@@ -11,6 +11,22 @@ import {
 
 export { BootScene } from "./scenes/BootScene";
 export {
+  advanceBattleStageState,
+  createBattleStageDefinition,
+  createBattleStageState,
+  getBattleStageSnapshot,
+  judgeBattleStageInput,
+  type BattleJudgmentEvent,
+  type BattleJudgmentOutcome,
+  type BattleLaneDefinition,
+  type BattleNoteDefinition,
+  type BattleNoteSnapshot,
+  type BattleNoteState,
+  type BattleStageDefinition,
+  type BattleStageSnapshot,
+  type BattleStageState
+} from "./battle-stage";
+export {
   createBootSceneModel,
   loadDemoRuntimeStage,
   loadDemoRuntimeItem,
