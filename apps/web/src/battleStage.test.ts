@@ -23,11 +23,9 @@ describe("battle stage baseline", () => {
       "right"
     ]);
     expect(battleStage.lanes.map((lane) => lane.centerX)).toEqual(
-      expect.arrayContaining(
-        [...battleStage.lanes]
-          .sort((leftLane, rightLane) => leftLane.centerX - rightLane.centerX)
-          .map((lane) => lane.centerX)
-      )
+      [...battleStage.lanes]
+        .sort((leftLane, rightLane) => leftLane.centerX - rightLane.centerX)
+        .map((lane) => lane.centerX)
     );
     expect(battleStage.cueArea.right).toBeLessThan(battleStage.playfield.left);
 
@@ -59,8 +57,8 @@ describe("battle stage baseline", () => {
     const midNote = midSnapshot.notes.find((candidate) => candidate.id === note.id);
     const hitNote = hitSnapshot.notes.find((candidate) => candidate.id === note.id);
 
-    expect(earlySnapshot.activeItemId).toBe("apple");
-    expect(hitSnapshot.activeItemId).toBe("apple");
+    expect(earlySnapshot.activeItemId).toBe(note.itemId);
+    expect(hitSnapshot.activeItemId).toBe(note.itemId);
     expect(earlyNote?.isVisible).toBe(true);
     expect(midNote?.isVisible).toBe(true);
     expect(hitNote?.isVisible).toBe(true);
