@@ -23,6 +23,9 @@ const HIT_WINDOW_MS = 180;
 const HIT_FEEL_DURATION_MS = 120;
 const COMBO_FEEL_DURATION_MS = 240;
 const COMBO_MILESTONE_THRESHOLDS = [3, 5, 10] as const;
+const FAIL_METER_MAX_VALUE = 100;
+const FAIL_METER_DRAIN_PER_MISS = 25;
+const FAIL_METER_RECOVERY_PER_HIT = 8;
 
 export type BattleLaneDirection = (typeof BATTLE_LANE_DIRECTIONS)[number];
 
@@ -116,6 +119,13 @@ export interface BattleComboFeedback {
   label: string;
 }
 
+export interface BattleFailMeter {
+  value: number;
+  maxValue: number;
+}
+
+export type BattleStageStatus = "playing" | "failed";
+
 export interface BattleStageState {
   battleStage: BattleStageDefinition;
   noteStates: Record<string, BattleNoteState>;
@@ -124,6 +134,9 @@ export interface BattleStageState {
   comboCount: number;
   bestComboCount: number;
   comboFeedback: BattleComboFeedback | null;
+  failMeter: BattleFailMeter;
+  stageStatus: BattleStageStatus;
+  failedAtMs: number | null;
   timelineTimeMs: number;
   loopCount: number;
 }
@@ -177,6 +190,13 @@ function createInitialNoteStates(battleStage: BattleStageDefinition): Record<str
   );
 }
 
+function createInitialFailMeter(): BattleFailMeter {
+  return {
+    value: FAIL_METER_MAX_VALUE,
+    maxValue: FAIL_METER_MAX_VALUE
+  };
+}
+
 function getNextLoopCount(battleStage: BattleStageDefinition, elapsedTimeMs: number): number {
   return battleStage.totalDurationMs > 0
     ? Math.max(0, Math.floor(elapsedTimeMs / battleStage.totalDurationMs))
@@ -195,6 +215,10 @@ function syncBattleLoop(
   battleStage: BattleStageDefinition,
   elapsedTimeMs: number
 ): BattleStageState {
+  if (state.stageStatus === "failed") {
+    return state;
+  }
+
   const timelineTimeMs = getTimelineTimeMs(battleStage, elapsedTimeMs);
   const nextLoopCount = getNextLoopCount(battleStage, elapsedTimeMs);
 
@@ -207,6 +231,9 @@ function syncBattleLoop(
       comboCount: 0,
       bestComboCount: state.bestComboCount,
       comboFeedback: null,
+      failMeter: createInitialFailMeter(),
+      stageStatus: "playing",
+      failedAtMs: null,
       timelineTimeMs,
       loopCount: nextLoopCount
     };
@@ -239,6 +266,9 @@ export function createBattleStageState(battleStage: BattleStageDefinition): Batt
     comboCount: 0,
     bestComboCount: 0,
     comboFeedback: null,
+    failMeter: createInitialFailMeter(),
+    stageStatus: "playing",
+    failedAtMs: null,
     timelineTimeMs: 0,
     loopCount: 0
   };
@@ -269,6 +299,24 @@ function breakCombo(
   };
 }
 
+function applyMissPenalty(
+  state: BattleStageState,
+  lastJudgment: BattleJudgmentEvent
+): BattleStageState {
+  const nextFailMeterValue = Math.max(0, state.failMeter.value - FAIL_METER_DRAIN_PER_MISS);
+  const stageStatus = nextFailMeterValue === 0 ? "failed" : state.stageStatus;
+
+  return {
+    ...breakCombo(state, lastJudgment),
+    failMeter: {
+      ...state.failMeter,
+      value: nextFailMeterValue
+    },
+    stageStatus,
+    failedAtMs: stageStatus === "failed" ? lastJudgment.judgedAtMs : state.failedAtMs
+  };
+}
+
 export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: number): BattleStageState {
   const { battleStage } = state;
   const loopSyncedState = syncBattleLoop(state, battleStage, elapsedTimeMs);
@@ -285,13 +333,15 @@ export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: 
       break;
     }
 
-    nextState = {
-      ...nextState,
-      noteStates: {
-        ...nextState.noteStates,
-        [note.id]: "missed"
+    nextState = applyMissPenalty(
+      {
+        ...nextState,
+        noteStates: {
+          ...nextState.noteStates,
+          [note.id]: "missed"
+        }
       },
-      lastJudgment: {
+      {
         noteId: note.id,
         itemId: note.itemId,
         laneIndex: note.laneIndex,
@@ -301,11 +351,12 @@ export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: 
         offsetMs: nextState.timelineTimeMs - note.hitTimeMs,
         outcome: "missed-window",
         consumedNote: true
-      },
-      hitFeedback: null,
-      comboCount: 0,
-      comboFeedback: null
-    };
+      }
+    );
+
+    if (nextState.stageStatus === "failed") {
+      break;
+    }
   }
 
   return nextState;
@@ -316,6 +367,10 @@ export function judgeBattleStageInput(
   elapsedTimeMs: number,
   key: string
 ): BattleStageState {
+  if (state.stageStatus === "failed") {
+    return state;
+  }
+
   const { battleStage } = state;
   const loopSyncedState = syncBattleLoop(state, battleStage, elapsedTimeMs);
   const targetNote = getFirstPendingNote(battleStage, loopSyncedState.noteStates);
@@ -334,7 +389,15 @@ export function judgeBattleStageInput(
   const offsetMs = loopSyncedState.timelineTimeMs - targetNote.hitTimeMs;
 
   if (offsetMs > HIT_WINDOW_MS) {
-    return breakCombo(advancedState, {
+    return applyMissPenalty(
+      {
+        ...advancedState,
+        noteStates: {
+          ...advancedState.noteStates,
+          [targetNote.id]: "missed"
+        }
+      },
+      {
         noteId: targetNote.id,
         itemId: targetNote.itemId,
         laneIndex: targetNote.laneIndex,
@@ -344,7 +407,8 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "missed-window",
         consumedNote: true
-      });
+      }
+    );
   }
 
   if (offsetMs < -HIT_WINDOW_MS) {
@@ -404,6 +468,13 @@ export function judgeBattleStageInput(
     },
     comboCount,
     bestComboCount: Math.max(advancedState.bestComboCount, comboCount),
+    failMeter: {
+      ...advancedState.failMeter,
+      value: Math.min(
+        advancedState.failMeter.maxValue,
+        advancedState.failMeter.value + FAIL_METER_RECOVERY_PER_HIT
+      )
+    },
     comboFeedback: {
       comboCount,
       milestoneThreshold,
@@ -411,6 +482,13 @@ export function judgeBattleStageInput(
       endsAtMs: loopSyncedState.timelineTimeMs + COMBO_FEEL_DURATION_MS,
       label: formatComboLabel(comboCount, milestoneThreshold)
     }
+  };
+}
+
+export function restartBattleStage(state: BattleStageState): BattleStageState {
+  return {
+    ...createBattleStageState(state.battleStage),
+    bestComboCount: state.bestComboCount
   };
 }
 
@@ -498,7 +576,10 @@ export function getBattleStageSnapshot(
   elapsedTimeMs: number,
   state?: BattleStageState
 ): BattleStageSnapshot {
-  const timelineTimeMs = getTimelineTimeMs(battleStage, elapsedTimeMs);
+  const timelineTimeMs =
+    state?.stageStatus === "failed"
+      ? state.timelineTimeMs
+      : getTimelineTimeMs(battleStage, elapsedTimeMs);
   const activePhrase =
     battleStage.phrases.find(
       (phrase) =>
