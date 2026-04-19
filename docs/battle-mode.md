@@ -134,3 +134,11 @@ Define the FNF-style competitive rhythm mode so implementation can build lane fl
 - The first implementation should remain compatible with the browser-first runtime split in [docs/architecture.md](architecture.md): Phaser owns chart timing and hit detection, while React may own surrounding HUD, prompts, and retry flow.
 - Battle Mode baseline review should confirm the hit-feel spec keeps the sync contract explicit for judgment timing, hit confirmation sound, receptor feedback, lane feedback, and animation alignment.
 - If a later issue needs opponent AI, multiple judgment tiers, or difficulty variants, that work should extend this spec rather than replace the four-lane, four-count vocabulary battle baseline.
+
+## Local Feel-Tuning Loop
+
+- Battle feel parameters should stay adjustable through the exported `DEFAULT_BATTLE_STAGE_TUNING` seam in `packages/runtime/src/battle-stage.ts`.
+- The baseline tuning surface covers BPM, preview recovery, note travel speed, hit window tolerance, hit feedback duration, combo feedback duration, combo milestone thresholds, and fail-meter gain and drain values.
+- Local feel iteration should start by overriding only the narrow parameter under review in a focused test or harness instead of restructuring stage generation or judgment flow.
+- Run `pnpm run smoke:battle-mode` after `pnpm install` to verify the Battle Mode doc contract plus the implemented hit, miss, combo, fail, and retry path.
+- Run `pnpm run smoke:runtime` alongside the Battle smoke when you need to confirm the browser runtime still mounts cleanly after tuning changes.

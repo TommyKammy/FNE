@@ -11,7 +11,9 @@ import {
 
 export { BootScene } from "./scenes/BootScene";
 export {
+  DEFAULT_BATTLE_STAGE_TUNING,
   advanceBattleStageState,
+  type BattleStageTuning,
   type BattleComboFeedback,
   type BattleFailMeter,
   createBattleStageDefinition,

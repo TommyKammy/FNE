@@ -16,16 +16,32 @@ const PLAYFIELD_HEIGHT_PX = SHELL_HEIGHT_PX - 80;
 const LANE_GAP_PX = 16;
 const RECEPTOR_OFFSET_PX = 74;
 const NOTE_SPAWN_TOP_PX = PLAYFIELD_TOP_PX + 112;
-const DEFAULT_BPM = 100;
-const PREVIEW_RECOVERY_MS = 900;
-const NOTE_TRAVEL_MS = 2200;
-const HIT_WINDOW_MS = 180;
-const HIT_FEEL_DURATION_MS = 120;
-const COMBO_FEEL_DURATION_MS = 240;
-const COMBO_MILESTONE_THRESHOLDS = [3, 5, 10] as const;
-const FAIL_METER_MAX_VALUE = 100;
-const FAIL_METER_DRAIN_PER_MISS = 25;
-const FAIL_METER_RECOVERY_PER_HIT = 8;
+
+export interface BattleStageTuning {
+  bpm: number;
+  previewRecoveryMs: number;
+  noteTravelMs: number;
+  hitWindowMs: number;
+  hitFeedbackDurationMs: number;
+  comboFeedbackDurationMs: number;
+  comboMilestoneThresholds: number[];
+  failMeterMaxValue: number;
+  failMeterDrainPerMiss: number;
+  failMeterRecoveryPerHit: number;
+}
+
+export const DEFAULT_BATTLE_STAGE_TUNING: BattleStageTuning = Object.freeze({
+  bpm: 100,
+  previewRecoveryMs: 900,
+  noteTravelMs: 2200,
+  hitWindowMs: 180,
+  hitFeedbackDurationMs: 120,
+  comboFeedbackDurationMs: 240,
+  comboMilestoneThresholds: [3, 5, 10],
+  failMeterMaxValue: 100,
+  failMeterDrainPerMiss: 25,
+  failMeterRecoveryPerHit: 8
+});
 
 export type BattleLaneDirection = (typeof BATTLE_LANE_DIRECTIONS)[number];
 
@@ -76,6 +92,7 @@ export interface BattleStageDefinition {
   phrases: BattlePhraseDefinition[];
   notes: BattleNoteDefinition[];
   totalDurationMs: number;
+  tuning: BattleStageTuning;
 }
 
 export interface BattleNoteSnapshot extends BattleNoteDefinition {
@@ -133,7 +150,7 @@ export interface BattleHitFeedback {
 
 export interface BattleComboFeedback {
   comboCount: number;
-  milestoneThreshold: (typeof COMBO_MILESTONE_THRESHOLDS)[number] | null;
+  milestoneThreshold: number | null;
   startedAtMs: number;
   endsAtMs: number;
   label: string;
@@ -210,10 +227,10 @@ function createInitialNoteStates(battleStage: BattleStageDefinition): Record<str
   );
 }
 
-function createInitialFailMeter(): BattleFailMeter {
+function createInitialFailMeter(tuning: BattleStageTuning): BattleFailMeter {
   return {
-    value: FAIL_METER_MAX_VALUE,
-    maxValue: FAIL_METER_MAX_VALUE
+    value: tuning.failMeterMaxValue,
+    maxValue: tuning.failMeterMaxValue
   };
 }
 
@@ -251,7 +268,7 @@ function syncBattleLoop(
       comboCount: 0,
       bestComboCount: state.bestComboCount,
       comboFeedback: null,
-      failMeter: createInitialFailMeter(),
+      failMeter: createInitialFailMeter(battleStage.tuning),
       stageStatus: "playing",
       failedAtMs: null,
       timelineTimeMs,
@@ -286,7 +303,7 @@ export function createBattleStageState(battleStage: BattleStageDefinition): Batt
     comboCount: 0,
     bestComboCount: 0,
     comboFeedback: null,
-    failMeter: createInitialFailMeter(),
+    failMeter: createInitialFailMeter(battleStage.tuning),
     stageStatus: "playing",
     failedAtMs: null,
     timelineTimeMs: 0,
@@ -298,8 +315,8 @@ function formatHitConfirmationLabel(offsetMs: number): string {
   return `Hit (${offsetMs >= 0 ? "+" : ""}${offsetMs}ms)`;
 }
 
-function getComboMilestoneThreshold(comboCount: number) {
-  return COMBO_MILESTONE_THRESHOLDS.find((threshold) => threshold === comboCount) ?? null;
+function getComboMilestoneThreshold(tuning: BattleStageTuning, comboCount: number) {
+  return tuning.comboMilestoneThresholds.find((threshold) => threshold === comboCount) ?? null;
 }
 
 function formatComboLabel(comboCount: number, milestoneThreshold: number | null) {
@@ -323,7 +340,10 @@ function applyMissPenalty(
   state: BattleStageState,
   lastJudgment: BattleJudgmentEvent
 ): BattleStageState {
-  const nextFailMeterValue = Math.max(0, state.failMeter.value - FAIL_METER_DRAIN_PER_MISS);
+  const nextFailMeterValue = Math.max(
+    0,
+    state.failMeter.value - state.battleStage.tuning.failMeterDrainPerMiss
+  );
   const stageStatus = nextFailMeterValue === 0 ? "failed" : state.stageStatus;
 
   return {
@@ -347,7 +367,7 @@ export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: 
       continue;
     }
 
-    const missDeadlineMs = note.hitTimeMs + HIT_WINDOW_MS;
+    const missDeadlineMs = note.hitTimeMs + battleStage.tuning.hitWindowMs;
 
     if (nextState.timelineTimeMs <= missDeadlineMs) {
       break;
@@ -408,7 +428,7 @@ export function judgeBattleStageInput(
 
   const offsetMs = loopSyncedState.timelineTimeMs - targetNote.hitTimeMs;
 
-  if (offsetMs > HIT_WINDOW_MS) {
+  if (offsetMs > battleStage.tuning.hitWindowMs) {
     return applyMissPenalty(
       {
         ...advancedState,
@@ -431,7 +451,7 @@ export function judgeBattleStageInput(
     );
   }
 
-  if (offsetMs < -HIT_WINDOW_MS) {
+  if (offsetMs < -battleStage.tuning.hitWindowMs) {
     return breakCombo(advancedState, {
         noteId: targetNote.id,
         itemId: targetNote.itemId,
@@ -460,7 +480,7 @@ export function judgeBattleStageInput(
   }
 
   const comboCount = advancedState.comboCount + 1;
-  const milestoneThreshold = getComboMilestoneThreshold(comboCount);
+  const milestoneThreshold = getComboMilestoneThreshold(battleStage.tuning, comboCount);
 
   return {
     ...advancedState,
@@ -482,7 +502,7 @@ export function judgeBattleStageInput(
     hitFeedback: {
       laneIndex: targetNote.laneIndex,
       startedAtMs: loopSyncedState.timelineTimeMs,
-      endsAtMs: loopSyncedState.timelineTimeMs + HIT_FEEL_DURATION_MS,
+      endsAtMs: loopSyncedState.timelineTimeMs + battleStage.tuning.hitFeedbackDurationMs,
       judgmentOutcome: "hit",
       confirmationLabel: formatHitConfirmationLabel(offsetMs)
     },
@@ -492,14 +512,14 @@ export function judgeBattleStageInput(
       ...advancedState.failMeter,
       value: Math.min(
         advancedState.failMeter.maxValue,
-        advancedState.failMeter.value + FAIL_METER_RECOVERY_PER_HIT
+        advancedState.failMeter.value + battleStage.tuning.failMeterRecoveryPerHit
       )
     },
     comboFeedback: {
       comboCount,
       milestoneThreshold,
       startedAtMs: loopSyncedState.timelineTimeMs,
-      endsAtMs: loopSyncedState.timelineTimeMs + COMBO_FEEL_DURATION_MS,
+      endsAtMs: loopSyncedState.timelineTimeMs + battleStage.tuning.comboFeedbackDurationMs,
       label: formatComboLabel(comboCount, milestoneThreshold)
     }
   };
@@ -512,7 +532,29 @@ export function restartBattleStage(state: BattleStageState): BattleStageState {
   };
 }
 
-export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDefinition {
+function resolveBattleStageTuning(tuningOverrides?: Partial<BattleStageTuning>): BattleStageTuning {
+  if (tuningOverrides === undefined) {
+    return {
+      ...DEFAULT_BATTLE_STAGE_TUNING,
+      comboMilestoneThresholds: [...DEFAULT_BATTLE_STAGE_TUNING.comboMilestoneThresholds]
+    };
+  }
+
+  return {
+    ...DEFAULT_BATTLE_STAGE_TUNING,
+    ...tuningOverrides,
+    comboMilestoneThresholds:
+      tuningOverrides.comboMilestoneThresholds === undefined
+        ? [...DEFAULT_BATTLE_STAGE_TUNING.comboMilestoneThresholds]
+        : [...tuningOverrides.comboMilestoneThresholds]
+  };
+}
+
+export function createBattleStageDefinition(
+  stage: RuntimeStage,
+  tuningOverrides?: Partial<BattleStageTuning>
+): BattleStageDefinition {
+  const tuning = resolveBattleStageTuning(tuningOverrides);
   const cueArea = createBounds(
     HORIZONTAL_MARGIN_PX,
     PLAYFIELD_TOP_PX,
@@ -528,7 +570,7 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
   );
   const laneWidth = (playfield.width - LANE_GAP_PX * (BATTLE_LANE_KEYS.length - 1)) / 4;
   const receptorY = playfield.bottom - RECEPTOR_OFFSET_PX;
-  const beatDurationMs = 60_000 / DEFAULT_BPM;
+  const beatDurationMs = 60_000 / tuning.bpm;
   const lanes = BATTLE_LANE_KEYS.map((key, index) => {
     const left = playfield.left + index * (laneWidth + LANE_GAP_PX);
 
@@ -552,7 +594,7 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
     const anchorLaneIndex = itemIndex % lanes.length;
     const lanePattern = createLanePattern(noteCount, anchorLaneIndex);
     const previewStartTimeMs = cursorMs;
-    const phraseStartTimeMs = previewStartTimeMs + NOTE_TRAVEL_MS;
+    const phraseStartTimeMs = previewStartTimeMs + tuning.noteTravelMs;
 
     lanePattern.forEach((laneIndex, noteIndex) => {
       const hitTimeMs = phraseStartTimeMs + noteIndex * beatDurationMs;
@@ -561,9 +603,9 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
         id: `${runtimeItem.item.id}-note-${noteIndex + 1}`,
         itemId: runtimeItem.item.id,
         laneIndex,
-        spawnTimeMs: hitTimeMs - NOTE_TRAVEL_MS,
+        spawnTimeMs: hitTimeMs - tuning.noteTravelMs,
         hitTimeMs,
-        travelDurationMs: NOTE_TRAVEL_MS
+        travelDurationMs: tuning.noteTravelMs
       });
     });
 
@@ -583,7 +625,7 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
       phraseEndTimeMs
     });
 
-    cursorMs = phraseEndTimeMs + PREVIEW_RECOVERY_MS;
+    cursorMs = phraseEndTimeMs + tuning.previewRecoveryMs;
   });
 
   return {
@@ -592,7 +634,8 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
     lanes,
     phrases,
     notes,
-    totalDurationMs: cursorMs
+    totalDurationMs: cursorMs,
+    tuning
   };
 }
 
@@ -609,7 +652,7 @@ export function getBattleStageSnapshot(
     battleStage.phrases.find(
       (phrase) =>
         timelineTimeMs >= phrase.previewStartTimeMs &&
-        timelineTimeMs < phrase.phraseEndTimeMs + PREVIEW_RECOVERY_MS
+        timelineTimeMs < phrase.phraseEndTimeMs + battleStage.tuning.previewRecoveryMs
     ) ?? null;
   const activeCue =
     activePhrase === null
