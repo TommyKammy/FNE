@@ -4,6 +4,7 @@ import {
   continueLearnStage,
   createLearnStageState,
   judgeLearnStageInput,
+  judgeLearnStageTimeout,
   restartLearnStageRound,
   type LearnStageProgressState
 } from "@fne/runtime/learn-stage";
@@ -176,6 +177,43 @@ describe("learn stage state", () => {
         itemId: "banana",
         passedWithSupport: false,
         attemptCount: 1
+      }
+    ]);
+  });
+
+  it("keeps the same item active after a missed timing window and records the supported clear", () => {
+    const stage = expectInProgressState(createLearnStageState(createFixtureStage()));
+    const awaitingInput = moveToAwaitingInput(stage);
+    const missed = judgeLearnStageTimeout(awaitingInput);
+
+    expect(missed.kind).toBe("in-progress");
+
+    if (missed.kind !== "in-progress") {
+      throw new Error("expected an in-progress learn stage");
+    }
+
+    expect(missed.currentIndex).toBe(0);
+    expect(missed.currentItem.item.id).toBe("apple");
+    expect(missed.roundState.phase).toBe("retry-needed");
+    expect(missed.roundState.feedbackBody).toContain("little late");
+
+    const replayIdle = restartLearnStageRound(missed);
+    const replayAwaitingInput = moveToAwaitingInput(expectInProgressState(replayIdle));
+    const passed = judgeLearnStageInput(replayAwaitingInput, "a");
+    const nextItem = continueLearnStage(expectInProgressState(passed));
+
+    expect(nextItem.kind).toBe("in-progress");
+
+    if (nextItem.kind !== "in-progress") {
+      throw new Error("expected an in-progress learn stage");
+    }
+
+    expect(nextItem.currentIndex).toBe(1);
+    expect(nextItem.completedItems).toEqual([
+      {
+        itemId: "apple",
+        passedWithSupport: true,
+        attemptCount: 2
       }
     ]);
   });

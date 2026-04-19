@@ -4,6 +4,7 @@ import {
   beginRevealRound,
   createRevealRoundState,
   judgeRevealRoundInput,
+  judgeRevealRoundTimeout,
   restartRevealRound,
   type RevealRoundContentError,
   type RevealRoundState
@@ -139,6 +140,17 @@ export function restartLearnStageRound(state: LearnStageState): LearnStageState 
   return {
     ...state,
     roundState: restartRevealRound(state.roundState)
+  };
+}
+
+export function judgeLearnStageTimeout(state: LearnStageState): LearnStageState {
+  if (state.kind !== "in-progress") {
+    return state;
+  }
+
+  return {
+    ...state,
+    roundState: judgeRevealRoundTimeout(state.roundState)
   };
 }
 

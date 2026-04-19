@@ -201,6 +201,21 @@ export function judgeRevealRoundInput(
   };
 }
 
+export function judgeRevealRoundTimeout(state: RevealRoundState): RevealRoundState {
+  if (state.phase !== "awaiting-input") {
+    return state;
+  }
+
+  return {
+    ...state,
+    phase: "retry-needed",
+    judgment: "retry-needed",
+    feedbackTitle: "Try again",
+    feedbackBody: `A little late that time. ${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. Press Enter to try again with the guided reveal and one more pronunciation cue.`,
+    lastInput: null
+  };
+}
+
 export function restartRevealRound(state: RevealRoundState): RevealRoundState {
   if (state.phase !== "retry-needed" && state.phase !== "passed") {
     return state;

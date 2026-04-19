@@ -3,6 +3,7 @@ import {
   beginRevealRound,
   createRevealRoundState,
   judgeRevealRoundInput,
+  judgeRevealRoundTimeout,
   restartRevealRound,
   type RevealRoundState
 } from "@fne/runtime/reveal-round";
@@ -128,6 +129,45 @@ describe("reveal round state", () => {
     expect(advanceRevealRound(passed)).toBe(passed);
     expect(judgeRevealRoundInput(passed, "a")).toBe(passed);
     expect(beginRevealRound(passed)).toBe(passed);
+  });
+
+  it("marks a missed response as retry-needed and preserves the supportive repeat path", () => {
+    const state = expectPlayableState(
+      createRevealRoundState({
+        id: "apple",
+        term: "apple",
+        meaning: "りんご",
+        pronunciation: "AP-uhl",
+        imageAssetId: "img-apple",
+        audioAssetId: "aud-apple"
+      })
+    );
+
+    const awaitingInput = advanceRevealRound(
+      advanceRevealRound(advanceRevealRound(advanceRevealRound(beginRevealRound(state))))
+    );
+
+    expect(awaitingInput.phase).toBe("awaiting-input");
+
+    const missed = judgeRevealRoundTimeout(awaitingInput);
+
+    expect(missed.phase).toBe("retry-needed");
+    expect(missed.judgment).toBe("retry-needed");
+    expect(missed.lastInput).toBeNull();
+    expect(missed.feedbackTitle).toBe("Try again");
+    expect(missed.feedbackBody).toContain("little late");
+
+    const replayAwaitingInput = advanceRevealRound(
+      advanceRevealRound(
+        advanceRevealRound(
+          advanceRevealRound(beginRevealRound(restartRevealRound(missed)))
+        )
+      )
+    );
+    const recovered = judgeRevealRoundInput(replayAwaitingInput, "a");
+
+    expect(recovered.phase).toBe("passed");
+    expect(recovered.passedWithSupport).toBe(true);
   });
 
   it("returns a recoverable content error when the term has no Latin letter", () => {
