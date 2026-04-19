@@ -50,6 +50,11 @@ export interface BattleLaneDefinition {
 
 export interface BattlePhraseDefinition {
   itemId: string;
+  term: string;
+  meaning: string;
+  pronunciation: string;
+  imageSrc: string;
+  audioSrc: string;
   previewStartTimeMs: number;
   previewEndTimeMs: number;
   phraseEndTimeMs: number;
@@ -85,7 +90,22 @@ export interface BattleNoteSnapshot extends BattleNoteDefinition {
 
 export interface BattleStageSnapshot {
   activeItemId: string | null;
+  activeCue: BattleActiveCueSnapshot | null;
   notes: BattleNoteSnapshot[];
+}
+
+export type BattleCuePhase = "preview" | "phrase";
+
+export interface BattleActiveCueSnapshot {
+  itemId: string;
+  term: string;
+  meaning: string;
+  pronunciation: string;
+  imageSrc: string;
+  audioSrc: string;
+  phase: BattleCuePhase;
+  previewEndsAtMs: number;
+  phraseEndsAtMs: number;
 }
 
 export type BattleNoteState = "pending" | "hit" | "missed";
@@ -553,6 +573,11 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
 
     phrases.push({
       itemId: runtimeItem.item.id,
+      term: runtimeItem.item.term,
+      meaning: runtimeItem.item.meaning,
+      pronunciation: runtimeItem.item.pronunciation,
+      imageSrc: runtimeItem.imageSrc,
+      audioSrc: runtimeItem.audioSrc,
       previewStartTimeMs,
       previewEndTimeMs: phraseStartTimeMs,
       phraseEndTimeMs
@@ -586,6 +611,20 @@ export function getBattleStageSnapshot(
         timelineTimeMs >= phrase.previewStartTimeMs &&
         timelineTimeMs < phrase.phraseEndTimeMs + PREVIEW_RECOVERY_MS
     ) ?? null;
+  const activeCue =
+    activePhrase === null
+      ? null
+      : {
+          itemId: activePhrase.itemId,
+          term: activePhrase.term,
+          meaning: activePhrase.meaning,
+          pronunciation: activePhrase.pronunciation,
+          imageSrc: activePhrase.imageSrc,
+          audioSrc: activePhrase.audioSrc,
+          phase: timelineTimeMs < activePhrase.previewEndTimeMs ? "preview" : "phrase",
+          previewEndsAtMs: activePhrase.previewEndTimeMs,
+          phraseEndsAtMs: activePhrase.phraseEndTimeMs
+        } satisfies BattleActiveCueSnapshot;
   const notes = battleStage.notes.map((note) => {
     const lane = battleStage.lanes[note.laneIndex];
     const rawProgress = (timelineTimeMs - note.spawnTimeMs) / note.travelDurationMs;
@@ -609,7 +648,8 @@ export function getBattleStageSnapshot(
   });
 
   return {
-    activeItemId: activePhrase?.itemId ?? null,
+    activeItemId: activeCue?.itemId ?? null,
+    activeCue,
     notes
   };
 }

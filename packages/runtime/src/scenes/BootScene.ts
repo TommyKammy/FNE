@@ -6,6 +6,7 @@ import {
   getBattleStageSnapshot,
   judgeBattleStageInput,
   restartBattleStage,
+  type BattleActiveCueSnapshot,
   type BattleStageDefinition,
   type BattleStageState
 } from "../battle-stage";
@@ -49,6 +50,7 @@ export class BootScene extends Phaser.Scene {
   private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
   private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
   private activeItemId: string | null = null;
+  private activeCuePhase: BattleActiveCueSnapshot["phase"] | null = null;
   private itemsById = new Map<string, RuntimeDemoItem>();
 
   constructor() {
@@ -324,9 +326,13 @@ export class BootScene extends Phaser.Scene {
       sprite.setAlpha(note.isVisible ? 0.96 : 0);
     });
 
-    if (snapshot.activeItemId !== this.activeItemId) {
-      this.activeItemId = snapshot.activeItemId;
-      this.renderActiveCue(snapshot.activeItemId);
+    if (
+      snapshot.activeCue?.itemId !== this.activeItemId ||
+      snapshot.activeCue?.phase !== this.activeCuePhase
+    ) {
+      this.activeItemId = snapshot.activeCue?.itemId ?? null;
+      this.activeCuePhase = snapshot.activeCue?.phase ?? null;
+      this.renderActiveCue(snapshot.activeCue);
     }
 
     this.renderHitFeedback();
@@ -336,22 +342,40 @@ export class BootScene extends Phaser.Scene {
     this.renderFailurePrompt();
   }
 
-  private renderActiveCue(activeItemId: string | null) {
-    const runtimeItem = activeItemId === null ? undefined : this.itemsById.get(activeItemId);
+  private renderActiveCue(activeCue: BattleActiveCueSnapshot | null) {
+    if (activeCue === null) {
+      return;
+    }
+
+    const runtimeItem = this.itemsById.get(activeCue.itemId);
 
     if (runtimeItem === undefined) {
       return;
     }
 
-    const itemIndex = this.runtimeStage.items.findIndex((candidate) => candidate.item.id === activeItemId);
+    const itemIndex = this.runtimeStage.items.findIndex(
+      (candidate) => candidate.item.id === activeCue.itemId
+    );
+    const isPreviewPhase = activeCue.phase === "preview";
+    const phaseLabel = isPreviewPhase
+      ? "Pronunciation preview before the phrase"
+      : "Phrase cue stays stable through the notes";
 
     this.cueImageFrame.setTexture(this.getImageKey(itemIndex));
-    this.cueMeaningText.setText(runtimeItem.item.meaning);
-    this.cueWordText.setText(runtimeItem.item.term.toUpperCase());
-    this.cuePronunciationText.setText(runtimeItem.item.pronunciation);
-    this.inputLegendText.setText(`Keys: Left / Down / Up / Right\nActive cue: ${runtimeItem.item.term}`);
-    this.sound.stopAll();
-    this.sound.play(this.getAudioKey(itemIndex));
+    this.cueMeaningText.setText(activeCue.meaning);
+    this.cueWordText
+      .setText(activeCue.term.toUpperCase())
+      .setFontSize(isPreviewPhase ? "18px" : "20px")
+      .setAlpha(isPreviewPhase ? 0.78 : 0.88);
+    this.cuePronunciationText.setText(`${activeCue.pronunciation} • ${phaseLabel}`);
+    this.inputLegendText.setText(
+      `Keys: Left / Down / Up / Right\nActive cue: ${activeCue.term}`
+    );
+
+    if (isPreviewPhase) {
+      this.sound.stopAll();
+      this.sound.play(this.getAudioKey(itemIndex));
+    }
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
@@ -362,6 +386,7 @@ export class BootScene extends Phaser.Scene {
       this.battleState = restartBattleStage(this.battleState);
       this.sceneStartTimeMs = this.time.now;
       this.activeItemId = null;
+      this.activeCuePhase = null;
       this.refreshFrame(0);
 
       return;

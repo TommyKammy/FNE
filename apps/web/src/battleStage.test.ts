@@ -71,6 +71,84 @@ describe("battle stage baseline", () => {
     expect(hitNote?.y).toBeCloseTo(hitNote?.receptorY ?? -1, 1);
   });
 
+  it("keeps one vocabulary cue active through preview and phrase timing before handing off cleanly", () => {
+    const runtimeStage = loadDemoRuntimeStage();
+    const battleStage = createBattleStageDefinition(runtimeStage);
+    const [firstPhrase, secondPhrase] = battleStage.phrases;
+    const firstPhraseNotes = battleStage.notes.filter((note) => note.itemId === firstPhrase?.itemId);
+
+    expect(firstPhrase).toBeDefined();
+    expect(secondPhrase).toBeDefined();
+    expect(firstPhraseNotes.length).toBeGreaterThan(0);
+
+    if (
+      firstPhrase === undefined ||
+      secondPhrase === undefined ||
+      firstPhraseNotes.length === 0
+    ) {
+      throw new Error("expected the battle stage to provide at least two vocabulary phrases");
+    }
+
+    const firstRuntimeItem = runtimeStage.items[0];
+    const firstPhraseAnchor = firstPhraseNotes[0];
+    const lastPhraseNote = firstPhraseNotes.at(-1);
+
+    expect(firstRuntimeItem).toBeDefined();
+    expect(firstPhraseAnchor).toBeDefined();
+    expect(lastPhraseNote).toBeDefined();
+
+    if (
+      firstRuntimeItem === undefined ||
+      firstPhraseAnchor === undefined ||
+      lastPhraseNote === undefined
+    ) {
+      throw new Error("expected demo runtime content to provide a playable first battle cue");
+    }
+
+    const previewSnapshot = getBattleStageSnapshot(battleStage, firstPhrase.previewStartTimeMs);
+    const phraseSnapshot = getBattleStageSnapshot(battleStage, lastPhraseNote.hitTimeMs);
+    const carriedCueState = judgeBattleStageInput(
+      createBattleStageState(battleStage),
+      firstPhraseAnchor.hitTimeMs,
+      battleStage.lanes[firstPhraseAnchor.laneIndex]?.key ?? "ArrowLeft"
+    );
+    const cueUnderFeedbackSnapshot = getBattleStageSnapshot(
+      battleStage,
+      firstPhraseAnchor.hitTimeMs,
+      carriedCueState
+    );
+    const handoffSnapshot = getBattleStageSnapshot(battleStage, secondPhrase.previewStartTimeMs);
+
+    expect(previewSnapshot.activeCue).toMatchObject({
+      itemId: firstPhrase.itemId,
+      phase: "preview",
+      term: firstRuntimeItem.item.term,
+      meaning: firstRuntimeItem.item.meaning,
+      pronunciation: firstRuntimeItem.item.pronunciation,
+      imageSrc: firstRuntimeItem.imageSrc
+    });
+    expect(previewSnapshot.activeCue?.previewEndsAtMs).toBe(firstPhrase.previewEndTimeMs);
+    expect(previewSnapshot.activeCue?.phraseEndsAtMs).toBe(firstPhrase.phraseEndTimeMs);
+
+    expect(phraseSnapshot.activeCue).toMatchObject({
+      itemId: firstPhrase.itemId,
+      phase: "phrase"
+    });
+    expect(phraseSnapshot.activeItemId).toBe(firstPhrase.itemId);
+
+    expect(cueUnderFeedbackSnapshot.activeCue).toMatchObject({
+      itemId: firstPhrase.itemId,
+      phase: "phrase"
+    });
+    expect(carriedCueState.hitFeedback).not.toBeNull();
+
+    expect(handoffSnapshot.activeCue).toMatchObject({
+      itemId: secondPhrase.itemId,
+      phase: "preview"
+    });
+    expect(handoffSnapshot.activeItemId).toBe(secondPhrase.itemId);
+  });
+
   it("registers a hit when the matching lane key lands inside the timing window", () => {
     const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
     const note = battleStage.notes[0];
