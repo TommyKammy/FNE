@@ -7,7 +7,7 @@ import {
   createLearnStageState,
   judgeLearnStageInput,
   judgeLearnStageTimeout,
-  restartLearnStage,
+  restartLearnStageAndBeginRound,
   restartLearnStageRound,
   type LearnStageState
 } from "../learn-stage";
@@ -137,8 +137,11 @@ export class BootScene extends Phaser.Scene {
     if (normalizedKey === "enter") {
       if (this.stageState.kind === "summary") {
         this.clearResponseTimeout();
-        this.stageState = restartLearnStage(this.stageState);
+        this.stageState = restartLearnStageAndBeginRound(this.stageState);
         this.renderStageState();
+        this.renderRoundState();
+        this.playPronunciationCue();
+        this.syncResponseTimeout();
         return;
       }
 
@@ -263,6 +266,7 @@ export class BootScene extends Phaser.Scene {
       `Pack ${this.stageState.packId} / Stage ${this.stageState.stageId} / Item ${this.stageState.currentIndex + 1} of ${this.stageState.items.length}`
     );
     this.cueLabelText.setText(`Visible cue: ${this.stageState.currentItem.item.meaning}`);
+    this.answerHintText.setText("Listen for the English word, then type its first letter.");
     this.renderRoundState();
   }
 

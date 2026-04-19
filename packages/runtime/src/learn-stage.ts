@@ -190,3 +190,18 @@ export function restartLearnStage(state: LearnStageState): LearnStageState {
     []
   );
 }
+
+export function restartLearnStageAndBeginRound(state: LearnStageState): LearnStageState {
+  const restartedState = restartLearnStage(state);
+
+  if (restartedState.kind !== "in-progress") {
+    return restartedState;
+  }
+
+  const attentionCue = beginLearnStageRound(restartedState);
+  const imageReveal = advanceLearnStageRound(attentionCue);
+  const pronunciationReveal = advanceLearnStageRound(imageReveal);
+  const textReveal = advanceLearnStageRound(pronunciationReveal);
+
+  return advanceLearnStageRound(textReveal);
+}
