@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Melon illustration</title>
+  <desc id="desc">A simple green melon slice for the demo vocabulary item.</desc>
+  <rect width="256" height="256" rx="40" fill="#f5fbec" />
+  <circle cx="128" cy="138" r="78" fill="#9bd36a" />
+  <circle cx="128" cy="138" r="62" fill="#dff3b8" />
+  <path
+    d="M83 132c12-20 36-34 64-34 16 0 31 5 43 13-12-15-35-25-62-25-34 0-63 17-75 42 9-1 20 1 30 4Z"
+    fill="#7eb44d"
+    opacity="0.9"
+  />
+  <circle cx="104" cy="134" r="5" fill="#6e5836" />
+  <circle cx="122" cy="152" r="5" fill="#6e5836" />
+  <circle cx="144" cy="127" r="5" fill="#6e5836" />
+  <circle cx="157" cy="150" r="5" fill="#6e5836" />
+  <circle cx="132" cy="173" r="5" fill="#6e5836" />
+  <path
+    d="M72 180c15 12 35 20 56 20 28 0 52-13 68-33-16 12-37 19-60 19-24 0-46-8-64-22Z"
+    fill="#ffffff"
+    opacity="0.35"
+  />
+</svg>
