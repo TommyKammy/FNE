@@ -19,6 +19,7 @@ const NOTE_SPAWN_TOP_PX = PLAYFIELD_TOP_PX + 112;
 const DEFAULT_BPM = 100;
 const PREVIEW_RECOVERY_MS = 900;
 const NOTE_TRAVEL_MS = 2200;
+const HIT_WINDOW_MS = 180;
 
 export type BattleLaneDirection = (typeof BATTLE_LANE_DIRECTIONS)[number];
 
@@ -81,6 +82,29 @@ export interface BattleStageSnapshot {
   notes: BattleNoteSnapshot[];
 }
 
+export type BattleNoteState = "pending" | "hit" | "missed";
+export type BattleJudgmentOutcome = "hit" | "wrong-lane" | "too-early" | "missed-window";
+
+export interface BattleJudgmentEvent {
+  noteId: string;
+  itemId: string;
+  laneIndex: number;
+  inputKey: string | null;
+  inputLaneIndex: number | null;
+  judgedAtMs: number;
+  offsetMs: number;
+  outcome: BattleJudgmentOutcome;
+  consumedNote: boolean;
+}
+
+export interface BattleStageState {
+  battleStage: BattleStageDefinition;
+  noteStates: Record<string, BattleNoteState>;
+  lastJudgment: BattleJudgmentEvent | null;
+  timelineTimeMs: number;
+  loopCount: number;
+}
+
 function createBounds(left: number, top: number, width: number, height: number): BattleBounds {
   return {
     left,
@@ -115,6 +139,202 @@ function createLanePattern(noteCount: number, anchorLaneIndex: number): number[]
   ] as const;
 
   return [...stablePatterns[noteCount - 1]];
+}
+
+function getTimelineTimeMs(battleStage: BattleStageDefinition, elapsedTimeMs: number): number {
+  return battleStage.totalDurationMs > 0
+    ? ((elapsedTimeMs % battleStage.totalDurationMs) + battleStage.totalDurationMs) %
+        battleStage.totalDurationMs
+    : 0;
+}
+
+function createInitialNoteStates(battleStage: BattleStageDefinition): Record<string, BattleNoteState> {
+  return Object.fromEntries(
+    battleStage.notes.map((note) => [note.id, "pending"] satisfies [string, BattleNoteState])
+  );
+}
+
+function getNextLoopCount(battleStage: BattleStageDefinition, elapsedTimeMs: number): number {
+  return battleStage.totalDurationMs > 0
+    ? Math.max(0, Math.floor(elapsedTimeMs / battleStage.totalDurationMs))
+    : 0;
+}
+
+function getFirstPendingNote(
+  battleStage: BattleStageDefinition,
+  noteStates: Record<string, BattleNoteState>
+): BattleNoteDefinition | undefined {
+  return battleStage.notes.find((note) => noteStates[note.id] === "pending");
+}
+
+function syncBattleLoop(
+  state: BattleStageState,
+  battleStage: BattleStageDefinition,
+  elapsedTimeMs: number
+): BattleStageState {
+  const timelineTimeMs = getTimelineTimeMs(battleStage, elapsedTimeMs);
+  const nextLoopCount = getNextLoopCount(battleStage, elapsedTimeMs);
+
+  if (nextLoopCount !== state.loopCount) {
+    return {
+      battleStage,
+      noteStates: createInitialNoteStates(battleStage),
+      lastJudgment: null,
+      timelineTimeMs,
+      loopCount: nextLoopCount
+    };
+  }
+
+  if (timelineTimeMs === state.timelineTimeMs) {
+    return state;
+  }
+
+  return {
+    ...state,
+    timelineTimeMs
+  };
+}
+
+export function createBattleStageState(battleStage: BattleStageDefinition): BattleStageState {
+  return {
+    battleStage,
+    noteStates: createInitialNoteStates(battleStage),
+    lastJudgment: null,
+    timelineTimeMs: 0,
+    loopCount: 0
+  };
+}
+
+export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: number): BattleStageState {
+  const { battleStage } = state;
+  const loopSyncedState = syncBattleLoop(state, battleStage, elapsedTimeMs);
+  let nextState = loopSyncedState;
+
+  for (const note of battleStage.notes) {
+    if (nextState.noteStates[note.id] !== "pending") {
+      continue;
+    }
+
+    const missDeadlineMs = note.hitTimeMs + HIT_WINDOW_MS;
+
+    if (nextState.timelineTimeMs <= missDeadlineMs) {
+      break;
+    }
+
+    nextState = {
+      ...nextState,
+      noteStates: {
+        ...nextState.noteStates,
+        [note.id]: "missed"
+      },
+      lastJudgment: {
+        noteId: note.id,
+        itemId: note.itemId,
+        laneIndex: note.laneIndex,
+        inputKey: null,
+        inputLaneIndex: null,
+        judgedAtMs: nextState.timelineTimeMs,
+        offsetMs: nextState.timelineTimeMs - note.hitTimeMs,
+        outcome: "missed-window",
+        consumedNote: true
+      }
+    };
+  }
+
+  return nextState;
+}
+
+export function judgeBattleStageInput(
+  state: BattleStageState,
+  elapsedTimeMs: number,
+  key: string
+): BattleStageState {
+  const { battleStage } = state;
+  const loopSyncedState = syncBattleLoop(state, battleStage, elapsedTimeMs);
+  const targetNote = getFirstPendingNote(battleStage, loopSyncedState.noteStates);
+  const advancedState = advanceBattleStageState(loopSyncedState, elapsedTimeMs);
+
+  if (targetNote === undefined) {
+    return advancedState;
+  }
+
+  const inputLaneIndex = battleStage.lanes.findIndex((lane) => lane.key === key);
+
+  if (inputLaneIndex === -1) {
+    return advancedState;
+  }
+
+  const offsetMs = loopSyncedState.timelineTimeMs - targetNote.hitTimeMs;
+
+  if (offsetMs > HIT_WINDOW_MS) {
+    return {
+      ...advancedState,
+      lastJudgment: {
+        noteId: targetNote.id,
+        itemId: targetNote.itemId,
+        laneIndex: targetNote.laneIndex,
+        inputKey: key,
+        inputLaneIndex,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
+        offsetMs,
+        outcome: "missed-window",
+        consumedNote: true
+      }
+    };
+  }
+
+  if (offsetMs < -HIT_WINDOW_MS) {
+    return {
+      ...advancedState,
+      lastJudgment: {
+        noteId: targetNote.id,
+        itemId: targetNote.itemId,
+        laneIndex: targetNote.laneIndex,
+        inputKey: key,
+        inputLaneIndex,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
+        offsetMs,
+        outcome: "too-early",
+        consumedNote: false
+      }
+    };
+  }
+
+  if (inputLaneIndex !== targetNote.laneIndex) {
+    return {
+      ...advancedState,
+      lastJudgment: {
+        noteId: targetNote.id,
+        itemId: targetNote.itemId,
+        laneIndex: targetNote.laneIndex,
+        inputKey: key,
+        inputLaneIndex,
+        judgedAtMs: loopSyncedState.timelineTimeMs,
+        offsetMs,
+        outcome: "wrong-lane",
+        consumedNote: false
+      }
+    };
+  }
+
+  return {
+    ...advancedState,
+    noteStates: {
+      ...advancedState.noteStates,
+      [targetNote.id]: "hit"
+    },
+    lastJudgment: {
+      noteId: targetNote.id,
+      itemId: targetNote.itemId,
+      laneIndex: targetNote.laneIndex,
+      inputKey: key,
+      inputLaneIndex,
+      judgedAtMs: loopSyncedState.timelineTimeMs,
+      offsetMs,
+      outcome: "hit",
+      consumedNote: true
+    }
+  };
 }
 
 export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDefinition {
@@ -198,13 +418,10 @@ export function createBattleStageDefinition(stage: RuntimeStage): BattleStageDef
 
 export function getBattleStageSnapshot(
   battleStage: BattleStageDefinition,
-  elapsedTimeMs: number
+  elapsedTimeMs: number,
+  state?: BattleStageState
 ): BattleStageSnapshot {
-  const timelineTimeMs =
-    battleStage.totalDurationMs > 0
-      ? ((elapsedTimeMs % battleStage.totalDurationMs) + battleStage.totalDurationMs) %
-        battleStage.totalDurationMs
-      : 0;
+  const timelineTimeMs = getTimelineTimeMs(battleStage, elapsedTimeMs);
   const activePhrase =
     battleStage.phrases.find(
       (phrase) =>
@@ -217,8 +434,9 @@ export function getBattleStageSnapshot(
     const progress = Math.min(Math.max(rawProgress, 0), 1);
     const y = NOTE_SPAWN_TOP_PX + (lane.receptorY - NOTE_SPAWN_TOP_PX) * progress;
     const lingerMs = 180;
+    const isResolved = state !== undefined && state.noteStates[note.id] !== "pending";
     const isVisible =
-      timelineTimeMs >= note.spawnTimeMs && timelineTimeMs <= note.hitTimeMs + lingerMs;
+      !isResolved && timelineTimeMs >= note.spawnTimeMs && timelineTimeMs <= note.hitTimeMs + lingerMs;
 
     return {
       ...note,

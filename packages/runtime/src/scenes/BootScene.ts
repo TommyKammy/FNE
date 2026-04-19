@@ -1,8 +1,12 @@
 import Phaser from "phaser";
 import {
+  advanceBattleStageState,
   createBattleStageDefinition,
+  createBattleStageState,
   getBattleStageSnapshot,
-  type BattleStageDefinition
+  judgeBattleStageInput,
+  type BattleStageDefinition,
+  type BattleStageState
 } from "../battle-stage";
 import { loadDemoRuntimeStage, type RuntimeDemoItem, type RuntimeStage } from "../demo-content";
 
@@ -13,16 +17,24 @@ const NOTE_FILLS = [0xff8b7c, 0xffcf88, 0x7ef0ad, 0x83d7ff];
 const RECEPTOR_IDLE_FILL = 0xe6edf5;
 const RECEPTOR_ACTIVE_FILL = 0xffcf88;
 const INPUT_PULSE_MS = 140;
+const JUDGMENT_COLORS = {
+  hit: "#7ef0ad",
+  "wrong-lane": "#ff8b7c",
+  "too-early": "#83d7ff",
+  "missed-window": "#ff8b7c"
+} as const;
 
 export class BootScene extends Phaser.Scene {
   private runtimeStage!: RuntimeStage;
   private battleStage!: BattleStageDefinition;
+  private battleState!: BattleStageState;
   private sceneStartTimeMs = 0;
   private cueImageFrame!: Phaser.GameObjects.Image;
   private cueWordText!: Phaser.GameObjects.Text;
   private cueMeaningText!: Phaser.GameObjects.Text;
   private cuePronunciationText!: Phaser.GameObjects.Text;
   private inputLegendText!: Phaser.GameObjects.Text;
+  private judgmentText!: Phaser.GameObjects.Text;
   private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
   private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
   private activeItemId: string | null = null;
@@ -45,6 +57,7 @@ export class BootScene extends Phaser.Scene {
   create() {
     this.runtimeStage = loadDemoRuntimeStage();
     this.battleStage = createBattleStageDefinition(this.runtimeStage);
+    this.battleState = createBattleStageState(this.battleStage);
     this.itemsById = new Map(
       this.runtimeStage.items.map((item) => [item.item.id, item] satisfies [string, RuntimeDemoItem])
     );
@@ -128,6 +141,15 @@ export class BootScene extends Phaser.Scene {
         wordWrap: { width: cueArea.width - 32 }
       })
       .setOrigin(0.5);
+    this.judgmentText = this.add
+      .text(centerX, cueArea.bottom - 106, "Waiting for first note", {
+        color: "#d6dee8",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "16px",
+        align: "center",
+        wordWrap: { width: cueArea.width - 32 }
+      })
+      .setOrigin(0.5);
   }
 
   private renderLanePlayfield() {
@@ -203,7 +225,9 @@ export class BootScene extends Phaser.Scene {
   }
 
   private refreshFrame(elapsedTimeMs: number) {
-    const snapshot = getBattleStageSnapshot(this.battleStage, elapsedTimeMs);
+    this.battleState = advanceBattleStageState(this.battleState, elapsedTimeMs);
+
+    const snapshot = getBattleStageSnapshot(this.battleStage, elapsedTimeMs, this.battleState);
 
     snapshot.notes.forEach((note) => {
       const sprite = this.noteSprites.get(note.id);
@@ -227,6 +251,8 @@ export class BootScene extends Phaser.Scene {
       this.activeItemId = snapshot.activeItemId;
       this.renderActiveCue(snapshot.activeItemId);
     }
+
+    this.renderJudgmentFeedback();
   }
 
   private renderActiveCue(activeItemId: string | null) {
@@ -255,7 +281,38 @@ export class BootScene extends Phaser.Scene {
     }
 
     this.lanePulseUntilMs[laneIndex] = this.time.now + INPUT_PULSE_MS;
+    this.battleState = judgeBattleStageInput(
+      this.battleState,
+      this.time.now - this.sceneStartTimeMs,
+      event.key
+    );
+    this.renderJudgmentFeedback();
   };
+
+  private renderJudgmentFeedback() {
+    const judgment = this.battleState.lastJudgment;
+
+    if (judgment === null) {
+      this.judgmentText.setColor("#d6dee8").setText("Waiting for first note");
+
+      return;
+    }
+
+    const labelByOutcome = {
+      hit: "Hit",
+      "wrong-lane": "Wrong lane",
+      "too-early": "Too early",
+      "missed-window": "Miss"
+    } as const;
+    const timingLabel =
+      judgment.outcome === "wrong-lane" || judgment.outcome === "missed-window"
+        ? ""
+        : ` (${judgment.offsetMs >= 0 ? "+" : ""}${judgment.offsetMs}ms)`;
+
+    this.judgmentText
+      .setColor(JUDGMENT_COLORS[judgment.outcome])
+      .setText(`${labelByOutcome[judgment.outcome]}${timingLabel}`);
+  }
 
   private getImageKey(index: number) {
     return `runtime-item-image-${index}`;
