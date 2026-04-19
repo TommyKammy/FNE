@@ -13,10 +13,12 @@ export { BootScene } from "./scenes/BootScene";
 export {
   advanceBattleStageState,
   type BattleComboFeedback,
+  type BattleFailMeter,
   createBattleStageDefinition,
   createBattleStageState,
   getBattleStageSnapshot,
   judgeBattleStageInput,
+  restartBattleStage,
   type BattleHitFeedback,
   type BattleJudgmentEvent,
   type BattleJudgmentOutcome,
@@ -26,6 +28,7 @@ export {
   type BattleNoteState,
   type BattleStageDefinition,
   type BattleStageSnapshot,
+  type BattleStageStatus,
   type BattleStageState
 } from "./battle-stage";
 export {

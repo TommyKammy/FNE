@@ -4,7 +4,8 @@ import {
   createBattleStageDefinition,
   createBattleStageState,
   getBattleStageSnapshot,
-  judgeBattleStageInput
+  judgeBattleStageInput,
+  restartBattleStage
 } from "@fne/runtime/battle-stage";
 import { loadDemoRuntimeStage } from "@fne/runtime/demo-content";
 
@@ -335,5 +336,67 @@ describe("battle stage baseline", () => {
       outcome: "wrong-lane",
       consumedNote: false
     });
+  });
+
+  it("fails the stage after sustained missed windows and supports an instant retry reset", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const [firstNote, secondNote, thirdNote, fourthNote, fifthNote] = battleStage.notes;
+
+    expect(firstNote).toBeDefined();
+    expect(secondNote).toBeDefined();
+    expect(thirdNote).toBeDefined();
+    expect(fourthNote).toBeDefined();
+    expect(fifthNote).toBeDefined();
+
+    if (
+      firstNote === undefined ||
+      secondNote === undefined ||
+      thirdNote === undefined ||
+      fourthNote === undefined ||
+      fifthNote === undefined
+    ) {
+      throw new Error("expected the battle stage to schedule at least five notes");
+    }
+
+    const firstMiss = advanceBattleStageState(
+      createBattleStageState(battleStage),
+      firstNote.hitTimeMs + 181
+    );
+    const secondMiss = advanceBattleStageState(firstMiss, secondNote.hitTimeMs + 181);
+    const thirdMiss = advanceBattleStageState(secondMiss, thirdNote.hitTimeMs + 181);
+    const failedState = advanceBattleStageState(thirdMiss, fourthNote.hitTimeMs + 181);
+
+    expect(firstMiss.failMeter.value).toBeGreaterThan(failedState.failMeter.value);
+    expect(thirdMiss.stageStatus).toBe("playing");
+    expect(thirdMiss.noteStates[fifthNote.id]).toBe("pending");
+    expect(failedState.failMeter.value).toBe(0);
+    expect(failedState.stageStatus).toBe("failed");
+    expect(failedState.failedAtMs).toBe(fourthNote.hitTimeMs + 181);
+    expect(failedState.lastJudgment).toMatchObject({
+      noteId: fourthNote.id,
+      outcome: "missed-window",
+      consumedNote: true
+    });
+
+    const ignoredInput = judgeBattleStageInput(
+      failedState,
+      fifthNote.hitTimeMs,
+      battleStage.lanes[fifthNote.laneIndex].key
+    );
+
+    expect(ignoredInput).toBe(failedState);
+
+    const restarted = restartBattleStage(failedState);
+
+    expect(restarted.stageStatus).toBe("playing");
+    expect(restarted.failedAtMs).toBeNull();
+    expect(restarted.failMeter).toEqual({
+      value: 100,
+      maxValue: 100
+    });
+    expect(restarted.comboCount).toBe(0);
+    expect(restarted.lastJudgment).toBeNull();
+    expect(restarted.noteStates[firstNote.id]).toBe("pending");
+    expect(restarted.noteStates[fourthNote.id]).toBe("pending");
   });
 });

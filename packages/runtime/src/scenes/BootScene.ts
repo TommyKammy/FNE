@@ -5,6 +5,7 @@ import {
   createBattleStageState,
   getBattleStageSnapshot,
   judgeBattleStageInput,
+  restartBattleStage,
   type BattleStageDefinition,
   type BattleStageState
 } from "../battle-stage";
@@ -19,6 +20,9 @@ const RECEPTOR_ACTIVE_FILL = 0xffcf88;
 const COMBO_IDLE_COLOR = "#d6dee8";
 const COMBO_HIT_COLOR = "#f6efe5";
 const COMBO_MILESTONE_COLOR = "#ffcf88";
+const FAIL_METER_FRAME_FILL = 0x0f1724;
+const FAIL_METER_FILL = 0xff8b7c;
+const FAIL_METER_SAFE_FILL = 0x7ef0ad;
 const JUDGMENT_COLORS = {
   hit: "#7ef0ad",
   "wrong-lane": "#ff8b7c",
@@ -38,6 +42,10 @@ export class BootScene extends Phaser.Scene {
   private inputLegendText!: Phaser.GameObjects.Text;
   private judgmentText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
+  private failMeterLabelText!: Phaser.GameObjects.Text;
+  private failMeterValueText!: Phaser.GameObjects.Text;
+  private failMeterFill!: Phaser.GameObjects.Rectangle;
+  private failureOverlay!: Phaser.GameObjects.Container;
   private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
   private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
   private activeItemId: string | null = null;
@@ -180,6 +188,27 @@ export class BootScene extends Phaser.Scene {
         fontFamily: "Trebuchet MS, Verdana, sans-serif",
         fontSize: "14px"
       });
+    this.failMeterLabelText = this.add
+      .text(playfield.left + 20, playfield.top + 82, "Fail meter", {
+        color: "#f6efe5",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "15px",
+        fontStyle: "bold"
+      });
+    this.add
+      .rectangle(playfield.left + 90, playfield.top + 112, 140, 16, FAIL_METER_FRAME_FILL, 1)
+      .setOrigin(0, 0.5)
+      .setStrokeStyle(2, 0xffffff, 0.12);
+    this.failMeterFill = this.add
+      .rectangle(playfield.left + 92, playfield.top + 112, 136, 12, FAIL_METER_SAFE_FILL, 1)
+      .setOrigin(0, 0.5);
+    this.failMeterValueText = this.add
+      .text(playfield.left + 238, playfield.top + 112, "100%", {
+        color: "#d6dee8",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "14px"
+      })
+      .setOrigin(1, 0.5);
     this.comboText = this.add
       .text(playfield.right - 20, playfield.top + 34, "Combo x0", {
         color: COMBO_IDLE_COLOR,
@@ -233,6 +262,50 @@ export class BootScene extends Phaser.Scene {
 
       this.noteSprites.set(note.id, sprite);
     });
+
+    const overlayWidth = 320;
+    const overlayHeight = 180;
+    const overlayCenterX = playfield.left + playfield.width / 2;
+    const overlayCenterY = playfield.top + playfield.height / 2;
+    const overlayBackground = this.add
+      .rectangle(0, 0, overlayWidth, overlayHeight, 0x0d1624, 0.94)
+      .setStrokeStyle(2, 0xff8b7c, 0.4);
+    const overlayTitle = this.add
+      .text(0, -44, "Stage failed", {
+        color: "#f6efe5",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "28px",
+        fontStyle: "bold"
+      })
+      .setOrigin(0.5);
+    const overlayBody = this.add
+      .text(0, 0, "Press R or Enter to retry instantly.", {
+        color: "#d6dee8",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "18px",
+        align: "center",
+        wordWrap: { width: overlayWidth - 48 }
+      })
+      .setOrigin(0.5);
+    const overlayHint = this.add
+      .text(0, 48, "The chart restarts without reloading the page.", {
+        color: "#ffcf88",
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "14px",
+        align: "center",
+        wordWrap: { width: overlayWidth - 48 }
+      })
+      .setOrigin(0.5);
+
+    this.failureOverlay = this.add
+      .container(overlayCenterX, overlayCenterY, [
+        overlayBackground,
+        overlayTitle,
+        overlayBody,
+        overlayHint
+      ])
+      .setDepth(10)
+      .setVisible(false);
   }
 
   private refreshFrame(elapsedTimeMs: number) {
@@ -259,6 +332,8 @@ export class BootScene extends Phaser.Scene {
     this.renderHitFeedback();
     this.renderJudgmentFeedback();
     this.renderComboFeedback();
+    this.renderFailMeter();
+    this.renderFailurePrompt();
   }
 
   private renderActiveCue(activeItemId: string | null) {
@@ -280,6 +355,18 @@ export class BootScene extends Phaser.Scene {
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
+    if (
+      this.battleState.stageStatus === "failed" &&
+      (event.key === "r" || event.key === "R" || event.key === "Enter")
+    ) {
+      this.battleState = restartBattleStage(this.battleState);
+      this.sceneStartTimeMs = this.time.now;
+      this.activeItemId = null;
+      this.refreshFrame(0);
+
+      return;
+    }
+
     const laneIndex = this.battleStage.lanes.findIndex((lane) => lane.key === event.key);
 
     if (laneIndex === -1) {
@@ -312,6 +399,12 @@ export class BootScene extends Phaser.Scene {
   }
 
   private renderJudgmentFeedback() {
+    if (this.battleState.stageStatus === "failed") {
+      this.judgmentText.setColor("#ff8b7c").setText("Missed too many notes");
+
+      return;
+    }
+
     const hitFeedback = this.battleState.hitFeedback;
 
     if (hitFeedback !== null && this.battleState.timelineTimeMs <= hitFeedback.endsAtMs) {
@@ -366,6 +459,25 @@ export class BootScene extends Phaser.Scene {
       )
       .setFontSize(fontSize)
       .setScale(1, 1);
+  }
+
+  private renderFailMeter() {
+    const { failMeter } = this.battleState;
+    const ratio = failMeter.maxValue > 0 ? failMeter.value / failMeter.maxValue : 0;
+    const fillWidth = Math.max(0, 136 * ratio);
+    const fillColor = ratio <= 0.35 ? FAIL_METER_FILL : FAIL_METER_SAFE_FILL;
+
+    this.failMeterFill.setDisplaySize(fillWidth, 12).setFillStyle(fillColor, 1);
+    this.failMeterLabelText.setText(
+      this.battleState.stageStatus === "failed" ? "Fail meter empty" : "Fail meter"
+    );
+    this.failMeterValueText.setText(`${Math.round(ratio * 100)}%`).setColor(
+      this.battleState.stageStatus === "failed" ? "#ff8b7c" : "#d6dee8"
+    );
+  }
+
+  private renderFailurePrompt() {
+    this.failureOverlay.setVisible(this.battleState.stageStatus === "failed");
   }
 
   private getImageKey(index: number) {
