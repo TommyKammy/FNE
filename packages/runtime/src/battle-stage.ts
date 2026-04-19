@@ -20,6 +20,7 @@ const DEFAULT_BPM = 100;
 const PREVIEW_RECOVERY_MS = 900;
 const NOTE_TRAVEL_MS = 2200;
 const HIT_WINDOW_MS = 180;
+const HIT_FEEL_DURATION_MS = 120;
 
 export type BattleLaneDirection = (typeof BATTLE_LANE_DIRECTIONS)[number];
 
@@ -97,10 +98,19 @@ export interface BattleJudgmentEvent {
   consumedNote: boolean;
 }
 
+export interface BattleHitFeedback {
+  laneIndex: number;
+  startedAtMs: number;
+  endsAtMs: number;
+  judgmentOutcome: "hit";
+  confirmationLabel: string;
+}
+
 export interface BattleStageState {
   battleStage: BattleStageDefinition;
   noteStates: Record<string, BattleNoteState>;
   lastJudgment: BattleJudgmentEvent | null;
+  hitFeedback: BattleHitFeedback | null;
   timelineTimeMs: number;
   loopCount: number;
 }
@@ -180,6 +190,7 @@ function syncBattleLoop(
       battleStage,
       noteStates: createInitialNoteStates(battleStage),
       lastJudgment: null,
+      hitFeedback: null,
       timelineTimeMs,
       loopCount: nextLoopCount
     };
@@ -191,7 +202,11 @@ function syncBattleLoop(
 
   return {
     ...state,
-    timelineTimeMs
+    timelineTimeMs,
+    hitFeedback:
+      state.hitFeedback !== null && timelineTimeMs > state.hitFeedback.endsAtMs
+        ? null
+        : state.hitFeedback
   };
 }
 
@@ -200,9 +215,14 @@ export function createBattleStageState(battleStage: BattleStageDefinition): Batt
     battleStage,
     noteStates: createInitialNoteStates(battleStage),
     lastJudgment: null,
+    hitFeedback: null,
     timelineTimeMs: 0,
     loopCount: 0
   };
+}
+
+function formatHitConfirmationLabel(offsetMs: number): string {
+  return `Hit (${offsetMs >= 0 ? "+" : ""}${offsetMs}ms)`;
 }
 
 export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: number): BattleStageState {
@@ -237,7 +257,8 @@ export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: 
         offsetMs: nextState.timelineTimeMs - note.hitTimeMs,
         outcome: "missed-window",
         consumedNote: true
-      }
+      },
+      hitFeedback: null
     };
   }
 
@@ -279,7 +300,8 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "missed-window",
         consumedNote: true
-      }
+      },
+      hitFeedback: null
     };
   }
 
@@ -296,7 +318,8 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "too-early",
         consumedNote: false
-      }
+      },
+      hitFeedback: null
     };
   }
 
@@ -313,7 +336,8 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "wrong-lane",
         consumedNote: false
-      }
+      },
+      hitFeedback: null
     };
   }
 
@@ -333,6 +357,13 @@ export function judgeBattleStageInput(
       offsetMs,
       outcome: "hit",
       consumedNote: true
+    },
+    hitFeedback: {
+      laneIndex: targetNote.laneIndex,
+      startedAtMs: loopSyncedState.timelineTimeMs,
+      endsAtMs: loopSyncedState.timelineTimeMs + HIT_FEEL_DURATION_MS,
+      judgmentOutcome: "hit",
+      confirmationLabel: formatHitConfirmationLabel(offsetMs)
     }
   };
 }
