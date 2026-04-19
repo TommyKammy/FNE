@@ -27,6 +27,7 @@ export {
   continueLearnStage,
   createLearnStageState,
   judgeLearnStageInput,
+  judgeLearnStageTimeout,
   restartLearnStageRound,
   type LearnStageContentErrorState,
   type LearnStageItemResult,
@@ -34,6 +35,19 @@ export {
   type LearnStageState,
   type LearnStageSummaryState
 } from "./learn-stage";
+export {
+  advanceRevealRound,
+  beginRevealRound,
+  createRevealRoundState,
+  judgeRevealRoundInput,
+  judgeRevealRoundTimeout,
+  restartRevealRound,
+  type RevealRoundContentError,
+  type RevealRoundJudgment,
+  type RevealRoundPhase,
+  type RevealRoundSetupResult,
+  type RevealRoundState
+} from "./reveal-round";
 export {
   createRuntimeGameConfig,
   mountRuntimeWithGameCtor,

@@ -6,6 +6,7 @@ import {
   continueLearnStage,
   createLearnStageState,
   judgeLearnStageInput,
+  judgeLearnStageTimeout,
   restartLearnStageRound,
   type LearnStageState
 } from "../learn-stage";
@@ -15,9 +16,11 @@ const CARD_FILL = 0x24324a;
 const SUCCESS_COLOR = "#7ef0ad";
 const FAILURE_COLOR = "#ff8b7c";
 const NEUTRAL_COLOR = "#ffcf88";
+const LEARN_RESPONSE_WINDOW_MS = 1800;
 
 export class BootScene extends Phaser.Scene {
   private stageState!: LearnStageState;
+  private responseTimeoutEvent: Phaser.Time.TimerEvent | null = null;
   private imageFrame!: Phaser.GameObjects.Image;
   private subheadText!: Phaser.GameObjects.Text;
   private feedbackTitleText!: Phaser.GameObjects.Text;
@@ -120,6 +123,7 @@ export class BootScene extends Phaser.Scene {
 
     this.input.keyboard?.on("keydown", this.handleKeyDown, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.clearResponseTimeout();
       this.input.keyboard?.off("keydown", this.handleKeyDown, this);
     });
 
@@ -135,6 +139,7 @@ export class BootScene extends Phaser.Scene {
       }
 
       if (this.stageState.roundState.phase === "passed") {
+        this.clearResponseTimeout();
         this.stageState = continueLearnStage(this.stageState);
         this.renderStageState();
         return;
@@ -158,16 +163,46 @@ export class BootScene extends Phaser.Scene {
       this.renderRoundState();
       this.stageState = advanceLearnStageRound(this.stageState);
       this.renderRoundState();
+      this.syncResponseTimeout();
       return;
     }
 
     const nextState = judgeLearnStageInput(this.stageState, event.key);
 
     if (nextState !== this.stageState) {
+      this.clearResponseTimeout();
       this.stageState = nextState;
       this.renderRoundState();
     }
   };
+
+  private syncResponseTimeout() {
+    this.clearResponseTimeout();
+
+    if (
+      this.stageState.kind !== "in-progress" ||
+      this.stageState.roundState.phase !== "awaiting-input"
+    ) {
+      return;
+    }
+
+    this.responseTimeoutEvent = this.time.delayedCall(LEARN_RESPONSE_WINDOW_MS, () => {
+      const nextState = judgeLearnStageTimeout(this.stageState);
+
+      if (nextState === this.stageState) {
+        return;
+      }
+
+      this.stageState = nextState;
+      this.responseTimeoutEvent = null;
+      this.renderRoundState();
+    });
+  }
+
+  private clearResponseTimeout() {
+    this.responseTimeoutEvent?.remove(false);
+    this.responseTimeoutEvent = null;
+  }
 
   private playPronunciationCue() {
     if (this.stageState.kind !== "in-progress") {
