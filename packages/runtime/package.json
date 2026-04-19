@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./battle-stage": "./src/battle-stage.ts",
     "./demo-content": "./src/demo-content.ts",
     "./learn-stage": "./src/learn-stage.ts",
     "./reveal-round": "./src/reveal-round.ts",
