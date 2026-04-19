@@ -97,6 +97,13 @@ describe("battle stage baseline", () => {
       offsetMs: 36,
       consumedNote: true
     });
+    expect(judgedState.hitFeedback).toMatchObject({
+      laneIndex: note.laneIndex,
+      startedAtMs: note.hitTimeMs + 36,
+      endsAtMs: note.hitTimeMs + 36 + 120,
+      judgmentOutcome: "hit",
+      confirmationLabel: "Hit (+36ms)"
+    });
 
     const snapshotAfterHit = getBattleStageSnapshot(
       battleStage,
@@ -106,6 +113,26 @@ describe("battle stage baseline", () => {
     const hitNote = snapshotAfterHit.notes.find((candidate) => candidate.id === note.id);
 
     expect(hitNote?.isVisible).toBe(false);
+  });
+
+  it("expires the hit feel baseline quickly so adjacent hits stay readable", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const note = battleStage.notes[0];
+
+    expect(note).toBeDefined();
+
+    if (note === undefined) {
+      throw new Error("expected the battle stage to schedule at least one note");
+    }
+
+    const lane = battleStage.lanes[note.laneIndex];
+    const hitState = judgeBattleStageInput(createBattleStageState(battleStage), note.hitTimeMs, lane.key);
+
+    expect(hitState.hitFeedback).not.toBeNull();
+
+    const settledState = advanceBattleStageState(hitState, note.hitTimeMs + 121);
+
+    expect(settledState.hitFeedback).toBeNull();
   });
 
   it("keeps failed inputs separate from the durable miss that closes the note window", () => {

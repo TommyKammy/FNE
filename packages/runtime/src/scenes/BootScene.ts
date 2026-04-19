@@ -16,7 +16,6 @@ const LANE_FILLS = [0x233354, 0x26415d, 0x274766, 0x2c3c59];
 const NOTE_FILLS = [0xff8b7c, 0xffcf88, 0x7ef0ad, 0x83d7ff];
 const RECEPTOR_IDLE_FILL = 0xe6edf5;
 const RECEPTOR_ACTIVE_FILL = 0xffcf88;
-const INPUT_PULSE_MS = 140;
 const JUDGMENT_COLORS = {
   hit: "#7ef0ad",
   "wrong-lane": "#ff8b7c",
@@ -38,7 +37,6 @@ export class BootScene extends Phaser.Scene {
   private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
   private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
   private activeItemId: string | null = null;
-  private lanePulseUntilMs: number[] = [0, 0, 0, 0];
   private itemsById = new Map<string, RuntimeDemoItem>();
 
   constructor() {
@@ -240,18 +238,12 @@ export class BootScene extends Phaser.Scene {
       sprite.setAlpha(note.isVisible ? 0.96 : 0);
     });
 
-    this.receptorSprites.forEach((receptor, laneIndex) => {
-      const isActive = this.time.now <= this.lanePulseUntilMs[laneIndex];
-
-      receptor.setFillStyle(isActive ? RECEPTOR_ACTIVE_FILL : RECEPTOR_IDLE_FILL, 1);
-      receptor.setScale(1, isActive ? 1.18 : 1);
-    });
-
     if (snapshot.activeItemId !== this.activeItemId) {
       this.activeItemId = snapshot.activeItemId;
       this.renderActiveCue(snapshot.activeItemId);
     }
 
+    this.renderHitFeedback();
     this.renderJudgmentFeedback();
   }
 
@@ -280,19 +272,42 @@ export class BootScene extends Phaser.Scene {
       return;
     }
 
-    this.lanePulseUntilMs[laneIndex] = this.time.now + INPUT_PULSE_MS;
     this.battleState = judgeBattleStageInput(
       this.battleState,
       this.time.now - this.sceneStartTimeMs,
       event.key
     );
+    this.renderHitFeedback();
     this.renderJudgmentFeedback();
   };
 
+  private renderHitFeedback() {
+    const hitFeedback = this.battleState.hitFeedback;
+    const activeLaneIndex =
+      hitFeedback !== null && this.battleState.timelineTimeMs <= hitFeedback.endsAtMs
+        ? hitFeedback.laneIndex
+        : -1;
+
+    this.receptorSprites.forEach((receptor, laneIndex) => {
+      const isActive = laneIndex === activeLaneIndex;
+
+      receptor.setFillStyle(isActive ? RECEPTOR_ACTIVE_FILL : RECEPTOR_IDLE_FILL, 1);
+      receptor.setScale(1, isActive ? 1.18 : 1);
+    });
+  }
+
   private renderJudgmentFeedback() {
+    const hitFeedback = this.battleState.hitFeedback;
+
+    if (hitFeedback !== null && this.battleState.timelineTimeMs <= hitFeedback.endsAtMs) {
+      this.judgmentText.setColor(JUDGMENT_COLORS.hit).setText(hitFeedback.confirmationLabel);
+
+      return;
+    }
+
     const judgment = this.battleState.lastJudgment;
 
-    if (judgment === null) {
+    if (judgment === null || judgment.outcome === "hit") {
       this.judgmentText.setColor("#d6dee8").setText("Waiting for first note");
 
       return;

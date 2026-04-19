@@ -16,6 +16,7 @@ export {
   createBattleStageState,
   getBattleStageSnapshot,
   judgeBattleStageInput,
+  type BattleHitFeedback,
   type BattleJudgmentEvent,
   type BattleJudgmentOutcome,
   type BattleLaneDefinition,
