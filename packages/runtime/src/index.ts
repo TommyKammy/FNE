@@ -28,6 +28,8 @@ export {
   createLearnStageState,
   judgeLearnStageInput,
   judgeLearnStageTimeout,
+  restartLearnStage,
+  restartLearnStageAndBeginRound,
   restartLearnStageRound,
   type LearnStageContentErrorState,
   type LearnStageItemResult,

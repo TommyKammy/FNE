@@ -7,6 +7,7 @@ import {
   createLearnStageState,
   judgeLearnStageInput,
   judgeLearnStageTimeout,
+  restartLearnStageAndBeginRound,
   restartLearnStageRound,
   type LearnStageState
 } from "../learn-stage";
@@ -134,6 +135,16 @@ export class BootScene extends Phaser.Scene {
     const normalizedKey = event.key.toLowerCase();
 
     if (normalizedKey === "enter") {
+      if (this.stageState.kind === "summary") {
+        this.clearResponseTimeout();
+        this.stageState = restartLearnStageAndBeginRound(this.stageState);
+        this.renderStageState();
+        this.renderRoundState();
+        this.playPronunciationCue();
+        this.syncResponseTimeout();
+        return;
+      }
+
       if (this.stageState.kind !== "in-progress") {
         return;
       }
@@ -229,21 +240,22 @@ export class BootScene extends Phaser.Scene {
       const supportedCount = this.stageState.completedItems.filter(
         (item) => item.passedWithSupport
       ).length;
+      const cleanClearCount = this.stageState.completedItems.length - supportedCount;
 
       this.imageFrame.setVisible(false);
       this.subheadText.setText(
         `Pack ${this.stageState.packId} / Stage ${this.stageState.stageId} / Summary`
       );
       this.cueLabelText.setText("Stage complete");
-      this.answerHintText.setText("Every scheduled Learn Mode item has been cleared.");
+      this.answerHintText.setText("Press Enter to play this stage again.");
       this.feedbackTitleText.setText("Stage summary");
       this.feedbackTitleText.setColor(SUCCESS_COLOR);
       this.feedbackBodyText.setText(
-        `Cleared ${this.stageState.completedItems.length} of ${this.stageState.totalItemCount} items. Supported repeats: ${supportedCount}.`
+        supportedCount === 0
+          ? `All ${this.stageState.totalItemCount} items cleared on the first try.`
+          : `First-try clears: ${cleanClearCount}. Needed another try: ${supportedCount}.`
       );
-      this.outcomeWordText
-        .setText(this.stageState.completedItems.map((item) => item.itemId).join("  •  "))
-        .setVisible(true);
+      this.outcomeWordText.setVisible(false);
       return;
     }
 
@@ -254,6 +266,7 @@ export class BootScene extends Phaser.Scene {
       `Pack ${this.stageState.packId} / Stage ${this.stageState.stageId} / Item ${this.stageState.currentIndex + 1} of ${this.stageState.items.length}`
     );
     this.cueLabelText.setText(`Visible cue: ${this.stageState.currentItem.item.meaning}`);
+    this.answerHintText.setText("Listen for the English word, then type its first letter.");
     this.renderRoundState();
   }
 
