@@ -246,4 +246,94 @@ describe("battle stage baseline", () => {
       consumedNote: true
     });
   });
+
+  it("tracks combo streaks, emits readable milestone accents, and clears the streak on failure", () => {
+    const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
+    const [firstNote, secondNote, thirdNote, fourthNote, fifthNote] = battleStage.notes;
+
+    expect(firstNote).toBeDefined();
+    expect(secondNote).toBeDefined();
+    expect(thirdNote).toBeDefined();
+    expect(fourthNote).toBeDefined();
+    expect(fifthNote).toBeDefined();
+
+    if (
+      firstNote === undefined ||
+      secondNote === undefined ||
+      thirdNote === undefined ||
+      fourthNote === undefined ||
+      fifthNote === undefined
+    ) {
+      throw new Error("expected the battle stage to schedule at least five notes");
+    }
+
+    const firstLane = battleStage.lanes[firstNote.laneIndex];
+    const secondLane = battleStage.lanes[secondNote.laneIndex];
+    const thirdLane = battleStage.lanes[thirdNote.laneIndex];
+    const fourthLane = battleStage.lanes[fourthNote.laneIndex];
+    const wrongFifthLane = battleStage.lanes[(fifthNote.laneIndex + 1) % battleStage.lanes.length];
+
+    const firstHit = judgeBattleStageInput(
+      createBattleStageState(battleStage),
+      firstNote.hitTimeMs,
+      firstLane.key
+    );
+
+    expect(firstHit.comboCount).toBe(1);
+    expect(firstHit.bestComboCount).toBe(1);
+    expect(firstHit.comboFeedback).toMatchObject({
+      comboCount: 1,
+      milestoneThreshold: null
+    });
+
+    const secondHit = judgeBattleStageInput(firstHit, secondNote.hitTimeMs, secondLane.key);
+
+    expect(secondHit.comboCount).toBe(2);
+    expect(secondHit.bestComboCount).toBe(2);
+    expect(secondHit.comboFeedback).toMatchObject({
+      comboCount: 2,
+      milestoneThreshold: null
+    });
+
+    const thirdHit = judgeBattleStageInput(secondHit, thirdNote.hitTimeMs, thirdLane.key);
+
+    expect(thirdHit.comboCount).toBe(3);
+    expect(thirdHit.bestComboCount).toBe(3);
+    expect(thirdHit.comboFeedback).toMatchObject({
+      comboCount: 3,
+      milestoneThreshold: 3
+    });
+    expect(thirdHit.comboFeedback?.endsAtMs).toBeGreaterThan(thirdNote.hitTimeMs);
+    const settledMilestone = advanceBattleStageState(
+      thirdHit,
+      (thirdHit.comboFeedback?.endsAtMs ?? thirdNote.hitTimeMs) + 1
+    );
+
+    expect(settledMilestone.comboCount).toBe(3);
+    expect(settledMilestone.comboFeedback).toBeNull();
+
+    const fourthHit = judgeBattleStageInput(settledMilestone, fourthNote.hitTimeMs, fourthLane.key);
+
+    expect(fourthHit.comboCount).toBe(4);
+    expect(fourthHit.bestComboCount).toBe(4);
+    expect(fourthHit.comboFeedback).toMatchObject({
+      comboCount: 4,
+      milestoneThreshold: null
+    });
+
+    const brokenCombo = judgeBattleStageInput(
+      fourthHit,
+      fifthNote.hitTimeMs,
+      wrongFifthLane.key
+    );
+
+    expect(brokenCombo.comboCount).toBe(0);
+    expect(brokenCombo.bestComboCount).toBe(4);
+    expect(brokenCombo.comboFeedback).toBeNull();
+    expect(brokenCombo.lastJudgment).toMatchObject({
+      noteId: fifthNote.id,
+      outcome: "wrong-lane",
+      consumedNote: false
+    });
+  });
 });

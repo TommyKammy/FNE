@@ -12,6 +12,7 @@ import {
 export { BootScene } from "./scenes/BootScene";
 export {
   advanceBattleStageState,
+  type BattleComboFeedback,
   createBattleStageDefinition,
   createBattleStageState,
   getBattleStageSnapshot,

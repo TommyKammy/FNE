@@ -21,6 +21,8 @@ const PREVIEW_RECOVERY_MS = 900;
 const NOTE_TRAVEL_MS = 2200;
 const HIT_WINDOW_MS = 180;
 const HIT_FEEL_DURATION_MS = 120;
+const COMBO_FEEL_DURATION_MS = 240;
+const COMBO_MILESTONE_THRESHOLDS = [3, 5, 10] as const;
 
 export type BattleLaneDirection = (typeof BATTLE_LANE_DIRECTIONS)[number];
 
@@ -106,11 +108,22 @@ export interface BattleHitFeedback {
   confirmationLabel: string;
 }
 
+export interface BattleComboFeedback {
+  comboCount: number;
+  milestoneThreshold: (typeof COMBO_MILESTONE_THRESHOLDS)[number] | null;
+  startedAtMs: number;
+  endsAtMs: number;
+  label: string;
+}
+
 export interface BattleStageState {
   battleStage: BattleStageDefinition;
   noteStates: Record<string, BattleNoteState>;
   lastJudgment: BattleJudgmentEvent | null;
   hitFeedback: BattleHitFeedback | null;
+  comboCount: number;
+  bestComboCount: number;
+  comboFeedback: BattleComboFeedback | null;
   timelineTimeMs: number;
   loopCount: number;
 }
@@ -191,6 +204,9 @@ function syncBattleLoop(
       noteStates: createInitialNoteStates(battleStage),
       lastJudgment: null,
       hitFeedback: null,
+      comboCount: 0,
+      bestComboCount: state.bestComboCount,
+      comboFeedback: null,
       timelineTimeMs,
       loopCount: nextLoopCount
     };
@@ -206,7 +222,11 @@ function syncBattleLoop(
     hitFeedback:
       state.hitFeedback !== null && timelineTimeMs > state.hitFeedback.endsAtMs
         ? null
-        : state.hitFeedback
+        : state.hitFeedback,
+    comboFeedback:
+      state.comboFeedback !== null && timelineTimeMs > state.comboFeedback.endsAtMs
+        ? null
+        : state.comboFeedback
   };
 }
 
@@ -216,6 +236,9 @@ export function createBattleStageState(battleStage: BattleStageDefinition): Batt
     noteStates: createInitialNoteStates(battleStage),
     lastJudgment: null,
     hitFeedback: null,
+    comboCount: 0,
+    bestComboCount: 0,
+    comboFeedback: null,
     timelineTimeMs: 0,
     loopCount: 0
   };
@@ -223,6 +246,27 @@ export function createBattleStageState(battleStage: BattleStageDefinition): Batt
 
 function formatHitConfirmationLabel(offsetMs: number): string {
   return `Hit (${offsetMs >= 0 ? "+" : ""}${offsetMs}ms)`;
+}
+
+function getComboMilestoneThreshold(comboCount: number) {
+  return COMBO_MILESTONE_THRESHOLDS.find((threshold) => threshold === comboCount) ?? null;
+}
+
+function formatComboLabel(comboCount: number, milestoneThreshold: number | null) {
+  return milestoneThreshold === null ? `${comboCount} combo` : `${comboCount} combo!`;
+}
+
+function breakCombo(
+  state: BattleStageState,
+  lastJudgment: BattleJudgmentEvent
+): BattleStageState {
+  return {
+    ...state,
+    lastJudgment,
+    hitFeedback: null,
+    comboCount: 0,
+    comboFeedback: null
+  };
 }
 
 export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: number): BattleStageState {
@@ -258,7 +302,9 @@ export function advanceBattleStageState(state: BattleStageState, elapsedTimeMs: 
         outcome: "missed-window",
         consumedNote: true
       },
-      hitFeedback: null
+      hitFeedback: null,
+      comboCount: 0,
+      comboFeedback: null
     };
   }
 
@@ -288,9 +334,7 @@ export function judgeBattleStageInput(
   const offsetMs = loopSyncedState.timelineTimeMs - targetNote.hitTimeMs;
 
   if (offsetMs > HIT_WINDOW_MS) {
-    return {
-      ...advancedState,
-      lastJudgment: {
+    return breakCombo(advancedState, {
         noteId: targetNote.id,
         itemId: targetNote.itemId,
         laneIndex: targetNote.laneIndex,
@@ -300,15 +344,11 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "missed-window",
         consumedNote: true
-      },
-      hitFeedback: null
-    };
+      });
   }
 
   if (offsetMs < -HIT_WINDOW_MS) {
-    return {
-      ...advancedState,
-      lastJudgment: {
+    return breakCombo(advancedState, {
         noteId: targetNote.id,
         itemId: targetNote.itemId,
         laneIndex: targetNote.laneIndex,
@@ -318,15 +358,11 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "too-early",
         consumedNote: false
-      },
-      hitFeedback: null
-    };
+      });
   }
 
   if (inputLaneIndex !== targetNote.laneIndex) {
-    return {
-      ...advancedState,
-      lastJudgment: {
+    return breakCombo(advancedState, {
         noteId: targetNote.id,
         itemId: targetNote.itemId,
         laneIndex: targetNote.laneIndex,
@@ -336,10 +372,11 @@ export function judgeBattleStageInput(
         offsetMs,
         outcome: "wrong-lane",
         consumedNote: false
-      },
-      hitFeedback: null
-    };
+      });
   }
+
+  const comboCount = advancedState.comboCount + 1;
+  const milestoneThreshold = getComboMilestoneThreshold(comboCount);
 
   return {
     ...advancedState,
@@ -364,6 +401,15 @@ export function judgeBattleStageInput(
       endsAtMs: loopSyncedState.timelineTimeMs + HIT_FEEL_DURATION_MS,
       judgmentOutcome: "hit",
       confirmationLabel: formatHitConfirmationLabel(offsetMs)
+    },
+    comboCount,
+    bestComboCount: Math.max(advancedState.bestComboCount, comboCount),
+    comboFeedback: {
+      comboCount,
+      milestoneThreshold,
+      startedAtMs: loopSyncedState.timelineTimeMs,
+      endsAtMs: loopSyncedState.timelineTimeMs + COMBO_FEEL_DURATION_MS,
+      label: formatComboLabel(comboCount, milestoneThreshold)
     }
   };
 }

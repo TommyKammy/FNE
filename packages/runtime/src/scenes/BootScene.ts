@@ -16,6 +16,9 @@ const LANE_FILLS = [0x233354, 0x26415d, 0x274766, 0x2c3c59];
 const NOTE_FILLS = [0xff8b7c, 0xffcf88, 0x7ef0ad, 0x83d7ff];
 const RECEPTOR_IDLE_FILL = 0xe6edf5;
 const RECEPTOR_ACTIVE_FILL = 0xffcf88;
+const COMBO_IDLE_COLOR = "#d6dee8";
+const COMBO_HIT_COLOR = "#f6efe5";
+const COMBO_MILESTONE_COLOR = "#ffcf88";
 const JUDGMENT_COLORS = {
   hit: "#7ef0ad",
   "wrong-lane": "#ff8b7c",
@@ -34,6 +37,7 @@ export class BootScene extends Phaser.Scene {
   private cuePronunciationText!: Phaser.GameObjects.Text;
   private inputLegendText!: Phaser.GameObjects.Text;
   private judgmentText!: Phaser.GameObjects.Text;
+  private comboText!: Phaser.GameObjects.Text;
   private receptorSprites: Phaser.GameObjects.Rectangle[] = [];
   private noteSprites = new Map<string, Phaser.GameObjects.Rectangle>();
   private activeItemId: string | null = null;
@@ -176,6 +180,15 @@ export class BootScene extends Phaser.Scene {
         fontFamily: "Trebuchet MS, Verdana, sans-serif",
         fontSize: "14px"
       });
+    this.comboText = this.add
+      .text(playfield.right - 20, playfield.top + 34, "Combo x0", {
+        color: COMBO_IDLE_COLOR,
+        fontFamily: "Trebuchet MS, Verdana, sans-serif",
+        fontSize: "18px",
+        fontStyle: "bold",
+        align: "right"
+      })
+      .setOrigin(1, 0.5);
 
     lanes.forEach((lane) => {
       this.add
@@ -245,6 +258,7 @@ export class BootScene extends Phaser.Scene {
 
     this.renderHitFeedback();
     this.renderJudgmentFeedback();
+    this.renderComboFeedback();
   }
 
   private renderActiveCue(activeItemId: string | null) {
@@ -279,6 +293,7 @@ export class BootScene extends Phaser.Scene {
     );
     this.renderHitFeedback();
     this.renderJudgmentFeedback();
+    this.renderComboFeedback();
   };
 
   private renderHitFeedback() {
@@ -327,6 +342,30 @@ export class BootScene extends Phaser.Scene {
     this.judgmentText
       .setColor(JUDGMENT_COLORS[judgment.outcome])
       .setText(`${labelByOutcome[judgment.outcome]}${timingLabel}`);
+  }
+
+  private renderComboFeedback() {
+    const { comboCount, comboFeedback, timelineTimeMs } = this.battleState;
+    const activeComboFeedback =
+      comboFeedback !== null && timelineTimeMs <= comboFeedback.endsAtMs ? comboFeedback : null;
+    const milestoneThreshold = activeComboFeedback?.milestoneThreshold ?? null;
+    const fontSize = milestoneThreshold === null ? "18px" : milestoneThreshold >= 10 ? "28px" : "24px";
+    const comboLabel =
+      comboCount > 0
+        ? activeComboFeedback?.label ?? `${comboCount} combo`
+        : "Combo x0";
+
+    this.comboText
+      .setText(comboLabel)
+      .setColor(
+        comboCount === 0
+          ? COMBO_IDLE_COLOR
+          : milestoneThreshold === null
+            ? COMBO_HIT_COLOR
+            : COMBO_MILESTONE_COLOR
+      )
+      .setFontSize(fontSize)
+      .setScale(1, 1);
   }
 
   private getImageKey(index: number) {
