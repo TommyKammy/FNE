@@ -78,3 +78,10 @@ Define the first-exposure learner flow for Learn Mode so implementation can sequ
 - Learn Mode defines reveal order, cue timing intent, feedback posture, and pass conditions.
 - Learn Mode does not define pack-specific word order, art style, scoring formulas, or unlock rules.
 - If a later issue needs stricter timing tiers or adaptive repetition counts, that work should extend this mode spec rather than replacing the image-first first-exposure flow.
+
+## Local Verification
+
+- Run `pnpm run smoke:learn-mode` after `pnpm install` to verify the Learn Mode slice stays aligned with this contract and with the implemented stage flow.
+- That smoke path should prove the reveal order, retry-needed recovery path, supported-repeat weak-word flag, and stage-summary progression without expanding into broader gameplay coverage.
+- Run `pnpm run smoke:runtime` alongside the Learn Mode smoke when you need to confirm the browser runtime still mounts cleanly after slice changes.
+- Run `pnpm run typecheck` and `pnpm run lint` before review so the slice stays aligned with the repo-wide validation gates.

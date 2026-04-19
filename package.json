@@ -9,6 +9,7 @@
   },
   "scripts": {
     "lint": "pnpm exec eslint apps packages --ext .ts,.tsx",
+    "smoke:learn-mode": "sh ./scripts/smoke-learn-mode.sh",
     "smoke:runtime": "pnpm --filter @fne/web test -- src/runtimeSmoke.test.ts",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm --filter @fne/web test"
