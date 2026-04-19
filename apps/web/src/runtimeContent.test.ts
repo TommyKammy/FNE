@@ -1,8 +1,7 @@
 import {
   assertValidPackManifest,
   assertValidVocabularyItem,
-  type PackManifest,
-  type VocabularyItem
+  type PackManifest
 } from "@fne/shared";
 import {
   createBootSceneModel,
