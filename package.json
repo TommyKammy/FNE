@@ -8,6 +8,7 @@
     "typescript-eslint": "^8.46.1"
   },
   "scripts": {
+    "smoke:battle-mode": "sh ./scripts/smoke-battle-mode.sh",
     "lint": "pnpm exec eslint apps packages --ext .ts,.tsx",
     "smoke:learn-mode": "sh ./scripts/smoke-learn-mode.sh",
     "smoke:runtime": "pnpm --filter @fne/web test -- src/runtimeSmoke.test.ts",

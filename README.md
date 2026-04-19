@@ -40,6 +40,7 @@ The lint and typecheck gate expectations live in [docs/validation-gates.md](docs
 Install dependencies with `pnpm install`, then use the repo validation scripts directly:
 
 - `pnpm run smoke:learn-mode` verifies the Learn Mode doc contract plus the stage-level reveal, retry, and summary progression path.
+- `pnpm run smoke:battle-mode` verifies the Battle Mode doc contract plus the tunable hit, miss, combo, fail, and retry path.
 - `pnpm run smoke:runtime` verifies the runtime skeleton still boots the Phaser shell and tears down cleanly.
 - `pnpm run typecheck` runs the TypeScript gate.
 - `pnpm run lint` runs the lint gate.

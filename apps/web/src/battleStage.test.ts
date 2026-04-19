@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_BATTLE_STAGE_TUNING,
   advanceBattleStageState,
   createBattleStageDefinition,
   createBattleStageState,
@@ -10,6 +11,67 @@ import {
 import { loadDemoRuntimeStage } from "@fne/runtime/demo-content";
 
 describe("battle stage baseline", () => {
+  it("accepts focused feel-tuning overrides without rewriting battle flow setup", () => {
+    const tunedBattleStage = createBattleStageDefinition(loadDemoRuntimeStage(), {
+      noteTravelMs: 1400,
+      hitWindowMs: 240,
+      hitFeedbackDurationMs: 90,
+      comboFeedbackDurationMs: 320,
+      comboMilestoneThresholds: [2, 4, 6]
+    });
+    const [firstNote, secondNote, thirdNote, fourthNote] = tunedBattleStage.notes;
+
+    expect(firstNote).toBeDefined();
+    expect(secondNote).toBeDefined();
+    expect(thirdNote).toBeDefined();
+    expect(fourthNote).toBeDefined();
+
+    if (
+      firstNote === undefined ||
+      secondNote === undefined ||
+      thirdNote === undefined ||
+      fourthNote === undefined
+    ) {
+      throw new Error("expected the tuned battle stage to schedule at least four notes");
+    }
+
+    expect(tunedBattleStage.tuning).toMatchObject({
+      ...DEFAULT_BATTLE_STAGE_TUNING,
+      noteTravelMs: 1400,
+      hitWindowMs: 240,
+      hitFeedbackDurationMs: 90,
+      comboFeedbackDurationMs: 320,
+      comboMilestoneThresholds: [2, 4, 6]
+    });
+    expect(firstNote.travelDurationMs).toBe(1400);
+    expect(firstNote.spawnTimeMs).toBe(firstNote.hitTimeMs - 1400);
+
+    const lane = tunedBattleStage.lanes[firstNote.laneIndex];
+    const earlyHit = judgeBattleStageInput(
+      createBattleStageState(tunedBattleStage),
+      firstNote.hitTimeMs - 220,
+      lane.key
+    );
+
+    expect(earlyHit.lastJudgment?.outcome).toBe("hit");
+    expect(earlyHit.hitFeedback?.endsAtMs).toBe(firstNote.hitTimeMs - 220 + 90);
+
+    const secondHit = judgeBattleStageInput(earlyHit, secondNote.hitTimeMs, tunedBattleStage.lanes[secondNote.laneIndex].key);
+    expect(secondHit.comboFeedback).toMatchObject({
+      comboCount: 2,
+      milestoneThreshold: 2,
+      endsAtMs: secondNote.hitTimeMs + 320
+    });
+
+    const thirdHit = judgeBattleStageInput(secondHit, thirdNote.hitTimeMs, tunedBattleStage.lanes[thirdNote.laneIndex].key);
+    const fourthHit = judgeBattleStageInput(thirdHit, fourthNote.hitTimeMs, tunedBattleStage.lanes[fourthNote.laneIndex].key);
+
+    expect(fourthHit.comboFeedback).toMatchObject({
+      comboCount: 4,
+      milestoneThreshold: 4
+    });
+  });
+
   it("builds four fixed learner lanes with stable receptors and keyboard mapping", () => {
     const battleStage = createBattleStageDefinition(loadDemoRuntimeStage());
 
