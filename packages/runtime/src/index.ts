@@ -12,11 +12,28 @@ import {
 export { BootScene } from "./scenes/BootScene";
 export {
   createBootSceneModel,
+  loadDemoRuntimeStage,
   loadDemoRuntimeItem,
+  loadRuntimeStageFromManifest,
   type BootSceneModel,
   type DemoRuntimeItemLoader,
-  type RuntimeDemoItem
+  type DemoRuntimeStageLoader,
+  type RuntimeDemoItem,
+  type RuntimeStage
 } from "./demo-content";
+export {
+  advanceLearnStageRound,
+  beginLearnStageRound,
+  continueLearnStage,
+  createLearnStageState,
+  judgeLearnStageInput,
+  restartLearnStageRound,
+  type LearnStageContentErrorState,
+  type LearnStageItemResult,
+  type LearnStageProgressState,
+  type LearnStageState,
+  type LearnStageSummaryState
+} from "./learn-stage";
 export {
   createRuntimeGameConfig,
   mountRuntimeWithGameCtor,

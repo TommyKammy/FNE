@@ -7,34 +7,43 @@ import {
 import {
   createBootSceneModel,
   loadDemoRuntimeItem,
-  loadRuntimeItemFromManifest
+  loadRuntimeItemFromManifest,
+  loadRuntimeStageFromManifest
 } from "@fne/runtime/demo-content";
 import { describe, expect, it, vi } from "vitest";
 
 describe("demo runtime content", () => {
   it("builds the boot scene model from a loader seam", () => {
-    const item: VocabularyItem = {
-      id: "banana",
-      term: "banana",
-      meaning: "バナナ",
-      pronunciation: "buh-NA-nuh",
-      imageAssetId: "img-banana",
-      audioAssetId: "aud-banana"
-    };
     const loader = vi.fn(() => ({
       packId: "demo-pack",
       stageId: "stage-fruit-1",
-      item,
-      imageSrc: "/content/packs/demo-pack/assets/images/img-banana.svg",
-      audioSrc: "/content/packs/demo-pack/assets/audio/aud-banana.wav"
+      items: [
+        {
+          packId: "demo-pack",
+          stageId: "stage-fruit-1",
+          item: {
+            id: "banana",
+            term: "banana",
+            meaning: "バナナ",
+            pronunciation: "buh-NA-nuh",
+            imageAssetId: "img-banana",
+            audioAssetId: "aud-banana"
+          },
+          imageSrc: "/content/packs/demo-pack/assets/images/img-banana.svg",
+          audioSrc: "/content/packs/demo-pack/assets/audio/aud-banana.wav"
+        }
+      ]
     }));
 
     const model = createBootSceneModel(loader);
 
     expect(loader).toHaveBeenCalledTimes(1);
-    expect(model.term).toBe("banana");
-    expect(model.meaning).toBe("バナナ");
-    expect(model.audioSrc).toBe("/content/packs/demo-pack/assets/audio/aud-banana.wav");
+    expect(model.packId).toBe("demo-pack");
+    expect(model.stageId).toBe("stage-fruit-1");
+    expect(model.items).toHaveLength(1);
+    expect(model.items[0]?.item.term).toBe("banana");
+    expect(model.items[0]?.item.meaning).toBe("バナナ");
+    expect(model.items[0]?.audioSrc).toBe("/content/packs/demo-pack/assets/audio/aud-banana.wav");
   });
 
   it("loads one demo item with canonical item fields and convention-aligned asset paths", () => {
@@ -94,6 +103,71 @@ describe("demo runtime content", () => {
     expect(runtimeItem.item.id).toBe("apple");
     expect(runtimeItem.imageSrc).toBe("/content/packs/demo-pack/assets/images/img-apple.svg");
     expect(runtimeItem.audioSrc).toBe("/content/packs/demo-pack/assets/audio/aud-apple.wav");
+  });
+
+  it("loads a short ordered runtime stage from stage item references", () => {
+    const manifest: PackManifest = {
+      schemaVersion: 1,
+      id: "demo-pack",
+      title: "Demo Pack",
+      description: "fixture",
+      vocabularyItems: [
+        {
+          id: "banana",
+          term: "banana",
+          meaning: "バナナ",
+          pronunciation: "buh-NA-nuh",
+          imageAssetId: "img-banana",
+          audioAssetId: "aud-banana"
+        },
+        {
+          id: "apple",
+          term: "apple",
+          meaning: "りんご",
+          pronunciation: "AP-uhl",
+          imageAssetId: "img-apple",
+          audioAssetId: "aud-apple"
+        },
+        {
+          id: "melon",
+          term: "melon",
+          meaning: "メロン",
+          pronunciation: "MEH-luhn",
+          imageAssetId: "img-melon",
+          audioAssetId: "aud-melon"
+        }
+      ],
+      stages: [
+        {
+          id: "stage-fruit-1",
+          title: "Fruit Basics",
+          vocabularyItemIds: ["apple", "melon", "banana"],
+          modeIds: ["practice"]
+        }
+      ],
+      modes: [
+        {
+          id: "practice",
+          label: "Practice",
+          description: "fixture"
+        }
+      ]
+    };
+
+    const runtimeStage = loadRuntimeStageFromManifest(manifest);
+
+    expect(runtimeStage.stageId).toBe("stage-fruit-1");
+    expect(runtimeStage.items.map((item) => item.item.id)).toEqual(["apple", "melon", "banana"]);
+    expect(runtimeStage.items.map((item) => item.imageSrc)).toEqual([
+      "/content/packs/demo-pack/assets/images/img-apple.svg",
+      "/content/packs/demo-pack/assets/images/img-melon.svg",
+      "/content/packs/demo-pack/assets/images/img-banana.svg"
+    ]);
+    expect(runtimeStage.items.map((item) => item.audioSrc)).toEqual([
+      "/content/packs/demo-pack/assets/audio/aud-apple.wav",
+      "/content/packs/demo-pack/assets/audio/aud-melon.wav",
+      "/content/packs/demo-pack/assets/audio/aud-banana.wav"
+    ]);
   });
 
   it("reports pack-specific validation errors instead of vocabulary-item prefixes", () => {

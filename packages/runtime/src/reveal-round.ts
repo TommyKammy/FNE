@@ -185,8 +185,8 @@ export function judgeRevealRoundInput(
       feedbackTitle: state.attemptCount > 1 ? "Nice recovery" : "Nice hit",
       feedbackBody:
         state.attemptCount > 1
-          ? `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. You cleared it after a supported repeat. Press Enter to replay the demo item.`
-          : `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. Press Enter to replay the demo item.`,
+          ? `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. You cleared it after a supported repeat. Press Enter to continue.`
+          : `${state.termLabel} starts with ${state.expectedKey.toUpperCase()}. Press Enter to continue.`,
       lastInput: normalizedKey
     };
   }
