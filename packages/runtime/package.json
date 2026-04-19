@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./demo-content": "./src/demo-content.ts",
+    "./learn-stage": "./src/learn-stage.ts",
     "./reveal-round": "./src/reveal-round.ts",
     "./runtime-mount": "./src/runtime-mount.ts"
   },
